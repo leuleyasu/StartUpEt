@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
 import '../../bloc/auth_bloc.dart';
 import '../../bloc/auth_event.dart';
@@ -29,8 +30,19 @@ class _LoginScreenState extends State<LoginScreen> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
+            final snackBar = SnackBar(
+              elevation: 0,
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.transparent,
+              content: AwesomeSnackbarContent(
+                title: 'Login Failed',
+                message: state.message,
+                contentType: ContentType.failure,
+              ),
+            );
             ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(state.message)));
+              ..hideCurrentSnackBar()
+              ..showSnackBar(snackBar);
           }
         },
         builder: (context, state) {
