@@ -1,0 +1,64 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../services/application_service.dart';
+import 'application_event.dart';
+import 'application_state.dart';
+
+class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
+  final ApplicationService _service;
+
+  ApplicationBloc(this._service) : super(const ApplicationInitial()) {
+    on<FetchApplications>(_onFetch);
+    on<FetchApplicationDetail>(_onFetchDetail);
+    on<CreateApplication>(_onCreate);
+    on<UpdateApplication>(_onUpdate);
+  }
+
+  Future<void> _onFetch(
+    FetchApplications event,
+    Emitter<ApplicationState> emit,
+  ) async {
+    emit(const ApplicationLoading());
+    final r = await _service.getApplications();
+    r.fold(
+      (f) => emit(ApplicationError(f.message)),
+      (d) => emit(ApplicationListLoaded(d)),
+    );
+  }
+
+  Future<void> _onFetchDetail(
+    FetchApplicationDetail event,
+    Emitter<ApplicationState> emit,
+  ) async {
+    emit(const ApplicationLoading());
+    final r = await _service.getApplication(event.id);
+    r.fold(
+      (f) => emit(ApplicationError(f.message)),
+      (d) => emit(ApplicationDetailLoaded(d)),
+    );
+  }
+
+  Future<void> _onCreate(
+    CreateApplication event,
+    Emitter<ApplicationState> emit,
+  ) async {
+    emit(const ApplicationLoading());
+    final r = await _service.createApplication(event.data);
+    r.fold(
+      (f) => emit(ApplicationError(f.message)),
+      (d) => emit(ApplicationCreated(d)),
+    );
+  }
+
+  Future<void> _onUpdate(
+    UpdateApplication event,
+    Emitter<ApplicationState> emit,
+  ) async {
+    emit(const ApplicationLoading());
+    final r = await _service.updateApplication(event.data);
+    r.fold(
+      (f) => emit(ApplicationError(f.message)),
+      (d) => emit(ApplicationCreated(d)),
+    );
+  }
+}
