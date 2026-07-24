@@ -54,18 +54,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.rocket_launch,
-                      size: 80,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                    Image.asset('assets/logo.jpg', height: 80),
                     const SizedBox(height: 16),
-                    Text(
-                      'StartupEt',
-                      style: Theme.of(context).textTheme.headlineLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
+                    // Text(
+                    //   'StartupEt',
+                    //   style: Theme.of(context).textTheme.headlineLarge
+                    //       ?.copyWith(fontWeight: FontWeight.bold),
+                    // ),
+                    // const SizedBox(height: 8),
                     Text(
                       'Ethiopian Startup Ecosystem',
                       style: Theme.of(context).textTheme.bodyLarge

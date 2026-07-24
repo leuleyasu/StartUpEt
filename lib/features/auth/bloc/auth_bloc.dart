@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/api_client.dart';
@@ -35,7 +36,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
     final result = await _authService.loginWithFayda(event.authCode);
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
+      (failure) {
+        debugPrint("Erorr:  ${failure.message}");
+        emit(AuthError(failure.message));
+      },
       (response) => emit(AuthAuthenticated(response.user)),
     );
   }

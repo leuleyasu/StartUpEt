@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'features/auth/bloc/auth_bloc.dart';
-import 'features/auth/bloc/auth_event.dart';
-import 'features/auth/bloc/auth_state.dart';
-import 'injection_container.dart' as di;
 import 'features/auth/presentation/screens/home_screen.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
+import 'injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.initDependencies();
-  runApp(const StartupetApp());
+
+  final storage = const FlutterSecureStorage();
+  final apiKey = await storage.read(key: 'api_key');
+  final isAuthenticated = apiKey != null && apiKey.isNotEmpty;
+
+  runApp(StartupetApp(isAuthenticated: isAuthenticated));
 }
 
 class StartupetApp extends StatelessWidget {
-  const StartupetApp({super.key});
+  final bool isAuthenticated;
+
+  const StartupetApp({super.key, required this.isAuthenticated});
 
   @override
   Widget build(BuildContext context) {
@@ -25,25 +30,16 @@ class StartupetApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+        ),
         useMaterial3: true,
       ),
       home: BlocProvider<AuthBloc>(
-        create: (context) => di.sl<AuthBloc>()..add(const AuthCheckRequested()),
-        child: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            if (state is AuthInitial || state is AuthLoading) {
-              return const Scaffold(
-                body: Center(
-                  child: SpinKitThreeBounce(color: Colors.deepPurple, size: 30),
-                ),
-              );
-            }
-            if (state is AuthAuthenticated) {
-              return const HomeScreen();
-            }
-            return const LoginScreen();
-          },
-        ),
+        create: (context) => di.sl<AuthBloc>(),
+        child: isAuthenticated ? const HomeScreen() : const LoginScreen(),
       ),
     );
   }
