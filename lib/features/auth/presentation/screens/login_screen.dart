@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../../bloc/auth_bloc.dart';
 import '../../bloc/auth_event.dart';
@@ -93,12 +94,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
                               },
                         child: state is AuthLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
+                            ? const SpinKitThreeBounce(
+                                color: Colors.white,
+                                size: 20,
                               )
                             : const Text('Login'),
                       ),

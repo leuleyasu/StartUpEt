@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/bloc/auth_event.dart';
@@ -32,7 +33,9 @@ class StartupetApp extends StatelessWidget {
           builder: (context, state) {
             if (state is AuthInitial || state is AuthLoading) {
               return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
+                body: Center(
+                  child: SpinKitThreeBounce(color: Colors.deepPurple, size: 30),
+                ),
               );
             }
             if (state is AuthAuthenticated) {
