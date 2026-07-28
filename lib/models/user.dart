@@ -8,12 +8,12 @@ class User {
   const User({required this.id, this.name, this.email, this.role, this.phone});
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-    id: json['id'] as String,
-    name: json['name'] as String?,
-    email: json['email'] as String?,
-    role: json['role'] as String?,
-    phone: json['phone'] as String?,
-  );
+        id: (json['id'] ?? json['_id'] ?? 'user_${DateTime.now().millisecondsSinceEpoch}') as String,
+        name: json['name'] as String?,
+        email: json['email'] as String?,
+        role: json['role'] as String?,
+        phone: json['phone'] as String?,
+      );
 
   Map<String, dynamic> toJson() => {
     'id': id,

@@ -6,10 +6,17 @@ class AuthResponse {
 
   const AuthResponse({required this.user, this.token});
 
-  factory AuthResponse.fromJson(Map<String, dynamic> json) => AuthResponse(
-    user: User.fromJson(json['user'] as Map<String, dynamic>),
-    token: (json['token'] ?? json['apiKey'] ?? json['accessToken']) as String?,
-  );
+  factory AuthResponse.fromJson(Map<String, dynamic> json) {
+    final userJson = json['user'];
+    final Map<String, dynamic> userMap = userJson is Map<String, dynamic>
+        ? userJson
+        : json;
+
+    return AuthResponse(
+      user: User.fromJson(userMap),
+      token: (json['token'] ?? json['apiKey'] ?? json['accessToken'] ?? json['sessionToken']) as String?,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'user': user.toJson(),

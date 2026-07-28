@@ -40,10 +40,14 @@ class AuthService {
 
       if (response.data is Map) {
         final mapData = response.data as Map<String, dynamic>;
-        if (mapData.containsKey('url') && mapData['url'].toString().contains('error=')) {
-          final uri = Uri.parse(mapData['url'].toString());
+        final url = mapData['url']?.toString() ?? '';
+        if (url.contains('signin') || url.contains('error=')) {
+          final uri = Uri.parse(url);
           final errParam = uri.queryParameters['error'];
-          return Left(ApiException(message: errParam ?? 'Invalid email or password'));
+          final message = errParam != null && errParam.isNotEmpty
+              ? errParam
+              : 'Invalid email or password';
+          return Left(ApiException(message: message));
         }
         return Right(AuthResponse.fromJson(mapData));
       }
