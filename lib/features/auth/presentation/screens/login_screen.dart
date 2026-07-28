@@ -15,19 +15,27 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneNumberController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   bool _isSignUp = false;
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  String _selectedRole = 'STARTUP_INDIVIDUAL';
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
+    _phoneNumberController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -36,9 +44,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (_isSignUp) {
         context.read<AuthBloc>().add(
               AuthRegisterRequested(
-                name: _nameController.text.trim(),
+                firstName: _firstNameController.text.trim(),
+                lastName: _lastNameController.text.trim(),
                 email: _emailController.text.trim(),
+                phoneNumber: _phoneNumberController.text.trim(),
                 password: _passwordController.text,
+                confirmPassword: _confirmPasswordController.text,
+                role: _selectedRole,
               ),
             );
       } else {
@@ -78,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
+                constraints: const BoxConstraints(maxWidth: 440),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -97,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: Theme.of(context).textTheme.bodyMedium
                             ?.copyWith(color: Colors.grey[600]),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
 
                       // Toggle Sign In / Sign Up Segmented Control
                       SegmentedButton<bool>(
@@ -123,23 +135,50 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 24),
 
                       if (_isSignUp) ...[
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: InputDecoration(
-                            labelText: 'Full Name',
-                            hintText: 'Enter your full name',
-                            border: const OutlineInputBorder(),
-                            prefixIcon: const Icon(Icons.person_outline),
-                            filled: true,
-                            fillColor: Colors.grey[100],
-                          ),
-                          validator: (value) {
-                            if (_isSignUp &&
-                                (value == null || value.trim().isEmpty)) {
-                              return 'Please enter your full name';
-                            }
-                            return null;
-                          },
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _firstNameController,
+                                decoration: InputDecoration(
+                                  labelText: 'First Name',
+                                  hintText: 'LEUL',
+                                  border: const OutlineInputBorder(),
+                                  prefixIcon: const Icon(Icons.person_outline),
+                                  filled: true,
+                                  fillColor: Colors.grey[100],
+                                ),
+                                validator: (value) {
+                                  if (_isSignUp &&
+                                      (value == null || value.trim().isEmpty)) {
+                                    return 'First name is required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _lastNameController,
+                                decoration: InputDecoration(
+                                  labelText: 'Last Name',
+                                  hintText: 'EYASU',
+                                  border: const OutlineInputBorder(),
+                                  prefixIcon: const Icon(Icons.person_outline),
+                                  filled: true,
+                                  fillColor: Colors.grey[100],
+                                ),
+                                validator: (value) {
+                                  if (_isSignUp &&
+                                      (value == null || value.trim().isEmpty)) {
+                                    return 'Last name is required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -149,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           labelText: 'Email Address',
-                          hintText: 'name@example.com',
+                          hintText: 'leuleyasu7@gmail.com',
                           border: const OutlineInputBorder(),
                           prefixIcon: const Icon(Icons.email_outlined),
                           filled: true,
@@ -166,6 +205,68 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
+
+                      if (_isSignUp) ...[
+                        TextFormField(
+                          controller: _phoneNumberController,
+                          keyboardType: TextInputType.phone,
+                          decoration: InputDecoration(
+                            labelText: 'Phone Number',
+                            hintText: '+251945138889',
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.phone_outlined),
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                          ),
+                          validator: (value) {
+                            if (_isSignUp &&
+                                (value == null || value.trim().isEmpty)) {
+                              return 'Please enter your phone number';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        DropdownButtonFormField<String>(
+                          initialValue: _selectedRole,
+                          decoration: InputDecoration(
+                            labelText: 'Role / Category',
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.category_outlined),
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'STARTUP_INDIVIDUAL',
+                              child: Text('Startup (Individual)'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'STARTUP_COMPANY',
+                              child: Text('Startup (Company)'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'ECOSYSTEM_BUILDER',
+                              child: Text('Ecosystem Builder'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _selectedRole = value;
+                              });
+                            }
+                          },
+                          validator: (value) {
+                            if (_isSignUp && (value == null || value.isEmpty)) {
+                              return 'Please select a role';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ],
 
                       TextFormField(
                         controller: _passwordController,
@@ -200,7 +301,49 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
+
+                      if (_isSignUp) ...[
+                        TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: _obscureConfirmPassword,
+                          decoration: InputDecoration(
+                            labelText: 'Confirm Password',
+                            hintText: 'Re-enter your password',
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.lock_reset),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirmPassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureConfirmPassword =
+                                      !_obscureConfirmPassword;
+                                });
+                              },
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                          ),
+                          validator: (value) {
+                            if (_isSignUp) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please confirm your password';
+                              }
+                              if (value != _passwordController.text) {
+                                return 'Passwords do not match';
+                              }
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      const SizedBox(height: 8),
 
                       SizedBox(
                         width: double.infinity,

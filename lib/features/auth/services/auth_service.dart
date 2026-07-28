@@ -74,17 +74,25 @@ class AuthService {
   }
 
   Future<Either<ApiException, AuthResponse>> register({
-    required String name,
+    required String firstName,
+    required String lastName,
     required String email,
+    required String phoneNumber,
     required String password,
+    required String confirmPassword,
+    required String role,
   }) async {
     try {
       final response = await _client.post(
         ApiEndpoints.authRegister,
         data: {
-          'name': name,
+          'firstName': firstName,
+          'lastName': lastName,
           'email': email,
+          'phoneNumber': phoneNumber,
           'password': password,
+          'confirmPassword': confirmPassword,
+          'role': role,
         },
       );
       return Right(

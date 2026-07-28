@@ -22,18 +22,34 @@ class AuthLoginRequested extends AuthEvent {
 }
 
 class AuthRegisterRequested extends AuthEvent {
-  final String name;
+  final String firstName;
+  final String lastName;
   final String email;
+  final String phoneNumber;
   final String password;
+  final String confirmPassword;
+  final String role;
 
   const AuthRegisterRequested({
-    required this.name,
+    required this.firstName,
+    required this.lastName,
     required this.email,
+    required this.phoneNumber,
     required this.password,
+    required this.confirmPassword,
+    required this.role,
   });
 
   @override
-  List<Object?> get props => [name, email, password];
+  List<Object?> get props => [
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        password,
+        confirmPassword,
+        role,
+      ];
 }
 
 class AuthLoginWithFayda extends AuthEvent {

@@ -48,9 +48,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     final result = await _authService.register(
-      name: event.name,
+      firstName: event.firstName,
+      lastName: event.lastName,
       email: event.email,
+      phoneNumber: event.phoneNumber,
       password: event.password,
+      confirmPassword: event.confirmPassword,
+      role: event.role,
     );
     await result.fold(
       (failure) async {
