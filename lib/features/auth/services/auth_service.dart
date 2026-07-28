@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
@@ -84,22 +85,63 @@ class AuthService {
   }) async {
     try {
       final response = await _client.post(
-        ApiEndpoints.authRegister,
-        data: {
-          'firstName': firstName,
-          'lastName': lastName,
-          'email': email,
-          'phoneNumber': phoneNumber,
-          'password': password,
-          'confirmPassword': confirmPassword,
-          'role': role,
-        },
+        ApiEndpoints.authSignUpAction,
+        data: jsonEncode([
+          {
+            'firstName': firstName,
+            'lastName': lastName,
+            'email': email,
+            'phoneNumber': phoneNumber,
+            'password': password,
+            'confirmPassword': confirmPassword,
+            'role': role,
+          }
+        ]),
+        options: Options(
+          headers: {
+            'Accept': 'text/x-component',
+            'Content-Type': 'text/plain;charset=UTF-8',
+            'Next-Action': '401e21b359758382b9aed247455b492204ca238e70',
+            'Next-Router-State-Tree':
+                '%5B%22%22%2C%7B%22children%22%3A%5B%22auth%22%2C%7B%22children%22%3A%5B%5B%22slug%22%2C%22sign-up%22%2C%22d%22%5D%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D',
+          },
+        ),
       );
 
-      if (response.statusCode == 200 && response.data is Map) {
-        return Right(
-          AuthResponse.fromJson(response.data as Map<String, dynamic>),
-        );
+      final responseStr = response.data.toString();
+
+      if (responseStr.contains('"success":false')) {
+        final match = RegExp(r'\{"success":false.*\}').firstMatch(responseStr);
+        if (match != null) {
+          final jsonMap = jsonDecode(match.group(0)!) as Map<String, dynamic>;
+          return Left(
+            ApiException(
+              message: jsonMap['message']?.toString() ?? 'Registration failed',
+            ),
+          );
+        }
+      }
+
+      if (responseStr.contains('"success":true')) {
+        final match = RegExp(r'\{"success":true.*\}').firstMatch(responseStr);
+        if (match != null) {
+          final jsonMap = jsonDecode(match.group(0)!) as Map<String, dynamic>;
+          final userJson = jsonMap['user'] as Map<String, dynamic>?;
+          final user = User(
+            id: userJson?['id']?.toString() ??
+                'user_${DateTime.now().millisecondsSinceEpoch}',
+            name: '$firstName $lastName',
+            email: userJson?['email']?.toString() ?? email,
+            phone: phoneNumber,
+            role: role,
+          );
+          return Right(
+            AuthResponse(
+              user: user,
+              token: 'token_${DateTime.now().millisecondsSinceEpoch}',
+            ),
+          );
+        }
       }
 
       final user = User(
@@ -116,23 +158,6 @@ class AuthService {
         ),
       );
     } on DioException catch (e) {
-      final responseData = e.response?.data?.toString() ?? '';
-      if (responseData.contains('not supported by NextAuth') ||
-          e.response?.statusCode == 400) {
-        final user = User(
-          id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-          name: '$firstName $lastName',
-          email: email,
-          phone: phoneNumber,
-          role: role,
-        );
-        return Right(
-          AuthResponse(
-            user: user,
-            token: 'token_${DateTime.now().millisecondsSinceEpoch}',
-          ),
-        );
-      }
       return Left(
         e.error is ApiException
             ? e.error as ApiException
