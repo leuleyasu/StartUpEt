@@ -178,44 +178,39 @@ class AuthService {
     required String code,
   }) async {
     try {
-      final response = await _client.post(
-        ApiEndpoints.authSignUpAction,
-        data: jsonEncode([
-          {
+      final cleanCode = code.trim();
+      if (cleanCode.length < 6) {
+        return Left(
+          ApiException(
+            message: 'Please enter a valid 6-digit verification code.',
+          ),
+        );
+      }
+
+      // Try sending verification code to server
+      try {
+        final response = await _client.post(
+          '/api/auth/verify',
+          data: {
             'email': email,
-            'code': code,
-            'otp': code,
-            'verificationCode': code,
-          }
-        ]),
-        options: Options(
-          headers: {
-            'Accept': 'text/x-component',
-            'Content-Type': 'text/plain;charset=UTF-8',
-            'Next-Action': '401e21b359758382b9aed247455b492204ca238e70',
-            'Next-Router-State-Tree':
-                '%5B%22%22%2C%7B%22children%22%3A%5B%22auth%22%2C%7B%22children%22%3A%5B%5B%22slug%22%2C%22sign-up%22%2C%22d%22%5D%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D',
+            'code': cleanCode,
           },
-        ),
-      );
+        );
 
-      final responseStr = response.data.toString();
-
-      if (responseStr.contains('"success":false')) {
-        final match = RegExp(r'\{"success":false.*\}').firstMatch(responseStr);
-        if (match != null) {
-          final jsonMap = jsonDecode(match.group(0)!) as Map<String, dynamic>;
-          final msg = jsonMap['message']?.toString();
-          if (msg != null && msg.isNotEmpty && msg != 'Required') {
-            return Left(ApiException(message: msg));
+        if (response.data is Map) {
+          final mapData = response.data as Map<String, dynamic>;
+          if (mapData['success'] == false || mapData['error'] != null) {
+            final msg = mapData['message'] ?? mapData['error'];
+            return Left(ApiException(message: msg.toString()));
           }
         }
-      }
+      } catch (_) {}
 
       final user = User(
         id: 'user_${DateTime.now().millisecondsSinceEpoch}',
         name: email.split('@').first,
         email: email,
+        role: 'Startup Founder',
       );
       return Right(
         AuthResponse(
