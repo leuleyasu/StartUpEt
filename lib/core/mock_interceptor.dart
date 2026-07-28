@@ -246,7 +246,7 @@ class MockInterceptor extends Interceptor {
           data: {'status': 'success', 'message': 'Mock response for $path'},
         ),
       );
-    });
+    }
   }
 
   @override
