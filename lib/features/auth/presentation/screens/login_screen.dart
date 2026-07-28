@@ -32,11 +32,11 @@ class _LoginScreenState extends State<LoginScreen> {
   void _submitLogin() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
-            AuthLoginRequested(
-              email: _emailController.text.trim(),
-              password: _passwordController.text,
-            ),
-          );
+        AuthLoginRequested(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        ),
+      );
     }
   }
 
@@ -76,17 +76,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 12),
                       Text(
                         'StartupET',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
+                        style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Ethiopian Startup Ecosystem',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
+                        style: Theme.of(context).textTheme.bodyMedium
                             ?.copyWith(color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 32),
@@ -152,8 +148,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: state is AuthLoading ? null : _submitLogin,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -179,9 +176,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         'Creating an account does not mean submitting a startup application.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                              fontStyle: FontStyle.italic,
-                            ),
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                       const SizedBox(height: 20),
 
