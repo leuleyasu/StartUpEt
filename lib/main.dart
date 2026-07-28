@@ -26,26 +26,29 @@ class StartupetApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'StartupEt',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-
-          primary: AppColors.primary,
+    return BlocProvider<AuthBloc>(
+      create: (context) => di.sl<AuthBloc>(),
+      child: MaterialApp(
+        title: 'StartupEt',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: AppColors.primary,
+            primary: AppColors.primary,
+          ),
+          primaryColor: AppColors.primary,
+          scaffoldBackgroundColor: Colors.white,
+          inputDecorationTheme: const InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white,
+          ),
+          useMaterial3: true,
         ),
-        primaryColor: AppColors.primary,
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.white,
-        ),
-        useMaterial3: true,
-      ),
-      home: BlocProvider<AuthBloc>(
-        create: (context) => di.sl<AuthBloc>(),
-        child: isAuthenticated ? const HomeScreen() : const LoginScreen(),
+        home: isAuthenticated ? const HomeScreen() : const LoginScreen(),
       ),
     );
   }

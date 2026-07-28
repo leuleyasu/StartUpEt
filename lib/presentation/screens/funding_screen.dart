@@ -242,6 +242,8 @@ class _FundingScreenState extends State<FundingScreen> with SingleTickerProvider
                 decoration: const InputDecoration(
                   labelText: 'Startup / Pitch Title',
                   hintText: 'e.g. AgriTech AI Solutions',
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
               ),
               const SizedBox(height: 12),
@@ -251,6 +253,8 @@ class _FundingScreenState extends State<FundingScreen> with SingleTickerProvider
                 decoration: const InputDecoration(
                   labelText: 'Executive Summary',
                   hintText: 'Briefly describe your solution and market target',
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
               ),
               const SizedBox(height: 16),

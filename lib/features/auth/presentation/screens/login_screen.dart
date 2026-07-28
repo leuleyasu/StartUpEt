@@ -100,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             border: const OutlineInputBorder(),
                             prefixIcon: const Icon(Icons.email_outlined),
                             filled: true,
-                            fillColor: Colors.grey[100],
+                            fillColor: Colors.white,
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                           ),
                           filled: true,
-                          fillColor: Colors.grey[100],
+                          fillColor: Colors.white,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -152,10 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => BlocProvider.value(
-                                  value: context.read<AuthBloc>(),
-                                  child: const ForgotPasswordScreen(),
-                                ),
+                                builder: (_) => const ForgotPasswordScreen(),
                               ),
                             );
                           },

@@ -105,7 +105,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           border: const OutlineInputBorder(),
                           prefixIcon: const Icon(Icons.email_outlined),
                           filled: true,
-                          fillColor: Colors.grey[100],
+                          fillColor: Colors.white,
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {

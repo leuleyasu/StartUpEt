@@ -45,16 +45,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _submitRegistration() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
-            AuthRegisterRequested(
-              firstName: _firstNameController.text.trim(),
-              lastName: _lastNameController.text.trim(),
-              email: _emailController.text.trim(),
-              phoneNumber: _phoneNumberController.text.trim(),
-              password: _passwordController.text,
-              confirmPassword: _confirmPasswordController.text,
-              role: _selectedRole,
-            ),
-          );
+        AuthRegisterRequested(
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          email: _emailController.text.trim(),
+          phoneNumber: _phoneNumberController.text.trim(),
+          password: _passwordController.text,
+          confirmPassword: _confirmPasswordController.text,
+          role: _selectedRole,
+        ),
+      );
     }
   }
 
@@ -130,9 +130,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SizedBox(height: 12),
           Text(
             'Ethiopian Startup Ecosystem',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
+            style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: Colors.grey[600]),
           ),
           const SizedBox(height: 24),
@@ -148,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.person_outline),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: Colors.white,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -168,7 +166,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.person_outline),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: Colors.white,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -274,9 +272,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_off
-                      : Icons.visibility,
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
                 ),
                 onPressed: () {
                   setState(() {
@@ -347,10 +343,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               child: state is AuthLoading
-                  ? const SpinKitThreeBounce(
-                      color: Colors.white,
-                      size: 20,
-                    )
+                  ? const SpinKitThreeBounce(color: Colors.white, size: 20)
                   : const Text(
                       'Create Account',
                       style: TextStyle(
@@ -372,7 +365,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildVerificationForm(
-      BuildContext context, AuthRequireVerification state) {
+    BuildContext context,
+    AuthRequireVerification state,
+  ) {
     return Form(
       key: _verifyFormKey,
       child: Column(
@@ -381,7 +376,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              color: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -393,18 +389,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SizedBox(height: 20),
           Text(
             'Verify Email Address',
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
+            style: Theme.of(context).textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             state.message,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[700],
-                ),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: Colors.grey[700]),
           ),
           const SizedBox(height: 12),
           Chip(
@@ -452,11 +445,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   : () {
                       if (_verifyFormKey.currentState!.validate()) {
                         context.read<AuthBloc>().add(
-                              AuthVerifyCodeRequested(
-                                email: state.email,
-                                code: _codeController.text.trim(),
-                              ),
-                            );
+                          AuthVerifyCodeRequested(
+                            email: state.email,
+                            code: _codeController.text.trim(),
+                          ),
+                        );
                       }
                     },
               style: ElevatedButton.styleFrom(
@@ -467,10 +460,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               child: state is AuthLoading
-                  ? const SpinKitThreeBounce(
-                      color: Colors.white,
-                      size: 20,
-                    )
+                  ? const SpinKitThreeBounce(color: Colors.white, size: 20)
                   : const Text(
                       'Verify & Continue',
                       style: TextStyle(
@@ -487,11 +477,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextButton(
                 onPressed: () {
                   context.read<AuthBloc>().add(
-                        AuthResendCodeRequested(email: state.email),
-                      );
+                    AuthResendCodeRequested(email: state.email),
+                  );
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Resending verification code to ${state.email}...'),
+                      content: Text(
+                        'Resending verification code to ${state.email}...',
+                      ),
                     ),
                   );
                 },

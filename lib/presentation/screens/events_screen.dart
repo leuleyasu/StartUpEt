@@ -272,6 +272,8 @@ class _EventsScreenState extends State<EventsScreen> with SingleTickerProviderSt
                   labelText: 'Start Date',
                   hintText: 'YYYY-MM-DD',
                   prefixIcon: Icon(Icons.calendar_today),
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
               ),
             ],
