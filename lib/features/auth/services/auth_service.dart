@@ -341,6 +341,55 @@ class AuthService {
     }
   }
 
+  Future<Either<ApiException, String>> forgotPassword({
+    required String email,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiEndpoints.authForgotPasswordAction,
+        data: jsonEncode([
+          {'email': email}
+        ]),
+        options: Options(
+          headers: {
+            'Accept': 'text/x-component',
+            'Content-Type': 'text/plain;charset=UTF-8',
+            'Next-Action': '405d83520a033ea4431ced211875cf60bf06c0635f',
+            'Next-Router-State-Tree':
+                '%5B%22%22%2C%7B%22children%22%3A%5B%22auth%22%2C%7B%22children%22%3A%5B%22forgot-password%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D',
+          },
+        ),
+      );
+
+      final responseStr = response.data.toString();
+
+      if (responseStr.contains('"success":false')) {
+        final match = RegExp(r'\{"success":false.*\}').firstMatch(responseStr);
+        if (match != null) {
+          final jsonMap = jsonDecode(match.group(0)!) as Map<String, dynamic>;
+          return Left(
+            ApiException(
+              message: jsonMap['message']?.toString() ??
+                  'Failed to send password reset email.',
+            ),
+          );
+        }
+      }
+
+      return const Right(
+        'If an account exists with that email, a password reset link has been sent.',
+      );
+    } on DioException catch (e) {
+      return Left(
+        e.error is ApiException
+            ? e.error as ApiException
+            : ApiException(
+                message: e.message ?? 'Password reset request failed',
+              ),
+      );
+    }
+  }
+
   Future<Either<ApiException, User>> getProtected() async {
     try {
       final response = await _client.get(ApiEndpoints.protected);

@@ -52,6 +52,15 @@ class AuthVerifiedSuccessfully extends AuthState {
   List<Object?> get props => [message];
 }
 
+class AuthForgotPasswordSuccess extends AuthState {
+  final String message;
+
+  const AuthForgotPasswordSuccess(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
 class AuthError extends AuthState {
   final String message;
 

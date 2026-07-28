@@ -18,6 +18,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthResendCodeRequested>(_onResendCodeRequested);
     on<AuthLoginWithFayda>(_onLoginWithFayda);
     on<AuthSetApiKey>(_onSetApiKey);
+    on<AuthForgotPasswordRequested>(_onForgotPasswordRequested);
     on<AuthLogout>(_onLogout);
   }
 
@@ -157,6 +158,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     await _apiClient.setApiKey(event.apiKey);
     add(const AuthCheckRequested());
+  }
+
+  Future<void> _onForgotPasswordRequested(
+    AuthForgotPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _authService.forgotPassword(email: event.email);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (message) => emit(AuthForgotPasswordSuccess(message)),
+    );
   }
 
   Future<void> _onLogout(AuthLogout event, Emitter<AuthState> emit) async {

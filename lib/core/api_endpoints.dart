@@ -7,6 +7,7 @@ class ApiEndpoints {
   static const String authCallbackCredentials =
       '/api/auth/callback/credentials';
   static const String authSignUpAction = '/auth/sign-up';
+  static const String authForgotPasswordAction = '/auth/forgot-password';
   static String authVerifyEmailAction(String email) =>
       '/auth/verify-email?email=${Uri.encodeComponent(email)}';
   static const String authRegister = '/api/auth/register';

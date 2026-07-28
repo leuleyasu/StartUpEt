@@ -92,6 +92,15 @@ class AuthResendCodeRequested extends AuthEvent {
   List<Object?> get props => [email];
 }
 
+class AuthForgotPasswordRequested extends AuthEvent {
+  final String email;
+
+  const AuthForgotPasswordRequested({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
 class AuthLogout extends AuthEvent {
   const AuthLogout();
 }

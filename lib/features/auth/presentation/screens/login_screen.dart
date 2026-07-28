@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
+import '../../../../core/app_colors.dart';
 import '../../bloc/auth_bloc.dart';
 import '../../bloc/auth_event.dart';
 import '../../bloc/auth_state.dart';
 import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -73,40 +75,43 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Image.asset('assets/logo.jpg', height: 80),
-                      const SizedBox(height: 12),
-                      Text(
-                        'StartupET',
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
+                      // const SizedBox(height: 12),
+                      // Text(
+                      //   'StartupET',
+                      //   style: Theme.of(context).textTheme.headlineMedium
+                      //       ?.copyWith(fontWeight: FontWeight.bold),
+                      // ),
                       const SizedBox(height: 4),
                       Text(
                         'Ethiopian Startup Ecosystem',
                         style: Theme.of(context).textTheme.bodyMedium
-                            ?.copyWith(color: Colors.grey[600]),
+                            ?.copyWith(color: AppColors.primary),
                       ),
                       const SizedBox(height: 32),
 
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: 'Email Address',
-                          hintText: 'name@example.com',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.email_outlined),
-                          filled: true,
-                          fillColor: Colors.grey[100],
+                      Container(
+                        color: Colors.white,
+                        child: TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            labelText: 'Email Address',
+                            hintText: 'name@example.com',
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.email_outlined),
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter your email';
+                            }
+                            if (!value.contains('@')) {
+                              return 'Please enter a valid email address';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!value.contains('@')) {
-                            return 'Please enter a valid email address';
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 16),
 
@@ -140,7 +145,24 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => BlocProvider.value(
+                                  value: context.read<AuthBloc>(),
+                                  child: const ForgotPasswordScreen(),
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text('Forgot Password?'),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
                       SizedBox(
                         width: double.infinity,
@@ -148,9 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: state is AuthLoading ? null : _submitLogin,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context)
-                                .colorScheme
-                                .primary,
+                            backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
