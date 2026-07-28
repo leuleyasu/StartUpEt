@@ -187,24 +187,34 @@ class AuthService {
         );
       }
 
-      // Try sending verification code to server
-      try {
-        final response = await _client.post(
-          '/api/auth/verify',
-          data: {
-            'email': email,
-            'code': cleanCode,
+      final response = await _client.post(
+        ApiEndpoints.authVerifyEmailAction(email),
+        data: jsonEncode([cleanCode]),
+        options: Options(
+          headers: {
+            'Accept': 'text/x-component',
+            'Content-Type': 'text/plain;charset=UTF-8',
+            'Next-Action': '40b291a02f9702249b6363f8c05629181374779315',
+            'Next-Router-State-Tree':
+                '%5B%22%22%2C%7B%22children%22%3A%5B%22auth%22%2C%7B%22children%22%3A%5B%22verify-email%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D',
           },
-        );
+        ),
+      );
 
-        if (response.data is Map) {
-          final mapData = response.data as Map<String, dynamic>;
-          if (mapData['success'] == false || mapData['error'] != null) {
-            final msg = mapData['message'] ?? mapData['error'];
-            return Left(ApiException(message: msg.toString()));
-          }
+      final responseStr = response.data.toString();
+
+      if (responseStr.contains('"success":false')) {
+        final match = RegExp(r'\{"success":false.*\}').firstMatch(responseStr);
+        if (match != null) {
+          final jsonMap = jsonDecode(match.group(0)!) as Map<String, dynamic>;
+          return Left(
+            ApiException(
+              message: jsonMap['message']?.toString() ??
+                  'Invalid or expired verification code.',
+            ),
+          );
         }
-      } catch (_) {}
+      }
 
       final user = User(
         id: 'user_${DateTime.now().millisecondsSinceEpoch}',
@@ -215,7 +225,8 @@ class AuthService {
       return Right(
         AuthResponse(
           user: user,
-          token: 'token_${DateTime.now().millisecondsSinceEpoch}',
+          token: 'session_${DateTime.now().millisecondsSinceEpoch}',
+          message: 'Email verified successfully! You can now log in.',
         ),
       );
     } on DioException catch (e) {
