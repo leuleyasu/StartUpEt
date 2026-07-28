@@ -247,7 +247,6 @@ class MockInterceptor extends Interceptor {
         ),
       );
     }
-  }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
