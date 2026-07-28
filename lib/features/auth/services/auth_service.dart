@@ -8,6 +8,8 @@ import '../../../core/api_client.dart';
 import '../../../core/api_endpoints.dart';
 import '../../../core/api_exceptions.dart';
 
+import '../../../core/api_config.dart';
+
 class AuthService {
   final ApiClient _client;
 
@@ -18,16 +20,21 @@ class AuthService {
     required String password,
   }) async {
     try {
-      // 1. Get NextAuth CSRF token
+      // 1. Get NextAuth CSRF token and cookies
       String? csrfToken;
+      String? cookieHeader;
       try {
         final csrfResponse = await _client.get(ApiEndpoints.authCsrf);
         if (csrfResponse.data is Map && csrfResponse.data['csrfToken'] != null) {
           csrfToken = csrfResponse.data['csrfToken'] as String;
         }
+        final setCookies = csrfResponse.headers['set-cookie'];
+        if (setCookies != null && setCookies.isNotEmpty) {
+          cookieHeader = setCookies.map((c) => c.split(';').first).join('; ');
+        }
       } catch (_) {}
 
-      // 2. Post to NextAuth callback endpoint with json=true query parameter
+      // 2. Post to NextAuth callback endpoint with form-urlencoded data & CSRF cookies
       final response = await _client.post(
         '${ApiEndpoints.authCallbackCredentials}?json=true',
         data: {
@@ -35,21 +42,34 @@ class AuthService {
           'email': username,
           'username': username,
           'password': password,
+          'callbackUrl': ApiConfig.baseUrl,
           'json': 'true',
         },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+          headers: {
+            if (cookieHeader != null) 'Cookie': cookieHeader,
+          },
+        ),
       );
 
       if (response.data is Map) {
         final mapData = response.data as Map<String, dynamic>;
         final url = mapData['url']?.toString() ?? '';
-        if (url.contains('signin') || url.contains('error=')) {
+
+        if (url.contains('error=')) {
           final uri = Uri.parse(url);
           final errParam = uri.queryParameters['error'];
           final message = errParam != null && errParam.isNotEmpty
-              ? errParam
+              ? Uri.decodeComponent(errParam)
               : 'Invalid email or password';
           return Left(ApiException(message: message));
         }
+
+        if (url.contains('signin')) {
+          return Left(ApiException(message: 'Invalid email or password'));
+        }
+
         return Right(AuthResponse.fromJson(mapData));
       }
 
@@ -58,13 +78,24 @@ class AuthService {
       );
     } on DioException catch (e) {
       String errorMsg = e.message ?? 'Login failed';
-      if (e.error is UnauthorizedException) {
+      final responseData = e.response?.data;
+      if (responseData is Map && responseData['url'] != null) {
+        final uri = Uri.parse(responseData['url'].toString());
+        final errParam = uri.queryParameters['error'];
+        if (errParam != null && errParam.isNotEmpty) {
+          errorMsg = Uri.decodeComponent(errParam);
+        } else {
+          errorMsg = 'Invalid email or password';
+        }
+      } else if (e.error is UnauthorizedException) {
         final data = (e.error as UnauthorizedException).data;
         if (data is Map && data['url'] != null) {
           final uri = Uri.parse(data['url'].toString());
           final errParam = uri.queryParameters['error'];
           if (errParam != null && errParam.isNotEmpty) {
-            errorMsg = errParam;
+            errorMsg = Uri.decodeComponent(errParam);
+          } else {
+            errorMsg = 'Invalid email or password';
           }
         } else {
           errorMsg = 'Invalid email or password';
