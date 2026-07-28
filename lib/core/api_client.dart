@@ -25,7 +25,7 @@ class ApiClient {
     );
 
     _dio.interceptors.add(LoggingInterceptor());
-    _dio.interceptors.add(MockInterceptor(enableOfflineMock: true));
+    _dio.interceptors.add(MockInterceptor(enableOfflineMock: false));
     _dio.interceptors.add(_apiKeyInterceptor());
     _dio.interceptors.add(_errorInterceptor());
   }

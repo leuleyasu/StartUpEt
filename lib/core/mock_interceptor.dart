@@ -8,7 +8,10 @@ class MockInterceptor extends Interceptor {
   MockInterceptor({this.enableOfflineMock = true});
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     if (!enableOfflineMock) {
       return handler.next(options);
     }
@@ -16,8 +19,8 @@ class MockInterceptor extends Interceptor {
     final path = options.path;
 
     // Simulate short network delay
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (path.contains(ApiEndpoints.authCallbackCredentials) ||
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (path.contains(ApiEndpoints.authCallbackCredentials) ||
           path.contains(ApiEndpoints.authRegister)) {
         final reqData = options.data is Map ? options.data as Map : {};
         final name = reqData['name'] ?? reqData['username'] ?? 'Startup Founder';

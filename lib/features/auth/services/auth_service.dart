@@ -20,6 +20,7 @@ class AuthService {
       final response = await _client.post(
         ApiEndpoints.authCallbackCredentials,
         data: {
+          'email': username,
           'username': username,
           'password': password,
         },
