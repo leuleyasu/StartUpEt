@@ -43,6 +43,15 @@ class AuthRequireVerification extends AuthState {
   List<Object?> get props => [email, message];
 }
 
+class AuthVerifiedSuccessfully extends AuthState {
+  final String message;
+
+  const AuthVerifiedSuccessfully(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
 class AuthError extends AuthState {
   final String message;
 

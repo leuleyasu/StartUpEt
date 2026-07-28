@@ -97,10 +97,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError(failure.message));
       },
       (response) async {
-        if (response.token != null && response.token!.isNotEmpty) {
-          await _apiClient.setApiKey(response.token!);
-        }
-        emit(AuthAuthenticated(response.user));
+        emit(
+          AuthVerifiedSuccessfully(
+            response.message ??
+                'Email verified successfully! You can now log in.',
+          ),
+        );
       },
     );
   }
