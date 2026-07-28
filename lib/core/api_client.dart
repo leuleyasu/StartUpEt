@@ -4,6 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_config.dart';
 import 'api_exceptions.dart';
 
+import 'mock_interceptor.dart';
+
 class ApiClient {
   late final Dio _dio;
   final FlutterSecureStorage _secureStorage;
@@ -21,6 +23,7 @@ class ApiClient {
       ),
     );
 
+    _dio.interceptors.add(MockInterceptor(enableOfflineMock: true));
     _dio.interceptors.add(_apiKeyInterceptor());
     _dio.interceptors.add(_errorInterceptor());
   }

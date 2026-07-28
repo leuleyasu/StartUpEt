@@ -12,9 +12,58 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AuthBloc(this._authService, this._apiClient) : super(const AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
+    on<AuthLoginRequested>(_onLoginRequested);
+    on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLoginWithFayda>(_onLoginWithFayda);
     on<AuthSetApiKey>(_onSetApiKey);
     on<AuthLogout>(_onLogout);
+  }
+
+  Future<void> _onLoginRequested(
+    AuthLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _authService.loginWithCredentials(
+      username: event.email,
+      password: event.password,
+    );
+    result.fold(
+      (failure) {
+        debugPrint("Login Error: ${failure.message}");
+        emit(AuthError(failure.message));
+      },
+      (response) async {
+        if (response.token != null && response.token!.isNotEmpty) {
+          await _apiClient.setApiKey(response.token!);
+        }
+        emit(AuthAuthenticated(response.user));
+      },
+    );
+  }
+
+  Future<void> _onRegisterRequested(
+    AuthRegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _authService.register(
+      name: event.name,
+      email: event.email,
+      password: event.password,
+    );
+    result.fold(
+      (failure) {
+        debugPrint("Register Error: ${failure.message}");
+        emit(AuthError(failure.message));
+      },
+      (response) async {
+        if (response.token != null && response.token!.isNotEmpty) {
+          await _apiClient.setApiKey(response.token!);
+        }
+        emit(AuthAuthenticated(response.user));
+      },
+    );
   }
 
   Future<void> _onCheckRequested(

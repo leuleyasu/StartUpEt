@@ -4,7 +4,13 @@ class ApiEndpoints {
   static const String applications = '/api/applications';
   static String application(String id) => '/api/applications/$id';
 
+  static const String authCallbackCredentials =
+      '/api/auth/callback/credentials';
+  static const String authRegister = '/api/auth/register';
   static const String authCallbackFayda = '/api/auth/callback/fayda';
+  static const String authProviders = '/api/auth/providers';
+  static const String authCsrf = '/api/auth/csrf';
+  static const String authSession = '/api/auth/session';
 
   static String certificateDownload(String id) =>
       '/api/certificates/$id/download';
