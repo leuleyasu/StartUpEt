@@ -17,6 +17,8 @@ class ApiClient {
         baseUrl: ApiConfig.baseUrl,
         connectTimeout: ApiConfig.connectTimeout,
         receiveTimeout: ApiConfig.receiveTimeout,
+        followRedirects: true,
+        validateStatus: (status) => status != null && status < 500,
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
