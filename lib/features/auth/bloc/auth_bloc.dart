@@ -28,8 +28,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       username: event.email,
       password: event.password,
     );
-    result.fold(
-      (failure) {
+    await result.fold(
+      (failure) async {
         debugPrint("Login Error: ${failure.message}");
         emit(AuthError(failure.message));
       },
@@ -52,8 +52,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       email: event.email,
       password: event.password,
     );
-    result.fold(
-      (failure) {
+    await result.fold(
+      (failure) async {
         debugPrint("Register Error: ${failure.message}");
         emit(AuthError(failure.message));
       },
@@ -84,12 +84,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     final result = await _authService.loginWithFayda(event.authCode);
-    result.fold(
-      (failure) {
+    await result.fold(
+      (failure) async {
         debugPrint("Erorr:  ${failure.message}");
         emit(AuthError(failure.message));
       },
-      (response) => emit(AuthAuthenticated(response.user)),
+      (response) async {
+        if (response.token != null && response.token!.isNotEmpty) {
+          await _apiClient.setApiKey(response.token!);
+        }
+        emit(AuthAuthenticated(response.user));
+      },
     );
   }
 
