@@ -70,6 +70,28 @@ class AuthSetApiKey extends AuthEvent {
   List<Object?> get props => [apiKey];
 }
 
+class AuthVerifyCodeRequested extends AuthEvent {
+  final String email;
+  final String code;
+
+  const AuthVerifyCodeRequested({
+    required this.email,
+    required this.code,
+  });
+
+  @override
+  List<Object?> get props => [email, code];
+}
+
+class AuthResendCodeRequested extends AuthEvent {
+  final String email;
+
+  const AuthResendCodeRequested({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
 class AuthLogout extends AuthEvent {
   const AuthLogout();
 }

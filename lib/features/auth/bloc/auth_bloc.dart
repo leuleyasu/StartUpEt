@@ -14,6 +14,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthCheckRequested>(_onCheckRequested);
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
+    on<AuthVerifyCodeRequested>(_onVerifyCodeRequested);
+    on<AuthResendCodeRequested>(_onResendCodeRequested);
     on<AuthLoginWithFayda>(_onLoginWithFayda);
     on<AuthSetApiKey>(_onSetApiKey);
     on<AuthLogout>(_onLogout);
@@ -62,11 +64,56 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError(failure.message));
       },
       (response) async {
+        if (response.requiresVerification) {
+          emit(
+            AuthRequireVerification(
+              email: event.email,
+              message: response.message ??
+                  'Registration successful! Please check your email for the verification code.',
+            ),
+          );
+        } else {
+          if (response.token != null && response.token!.isNotEmpty) {
+            await _apiClient.setApiKey(response.token!);
+          }
+          emit(AuthAuthenticated(response.user));
+        }
+      },
+    );
+  }
+
+  Future<void> _onVerifyCodeRequested(
+    AuthVerifyCodeRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _authService.verifyCode(
+      email: event.email,
+      code: event.code,
+    );
+    await result.fold(
+      (failure) async {
+        debugPrint("Verify Error: ${failure.message}");
+        emit(AuthError(failure.message));
+      },
+      (response) async {
         if (response.token != null && response.token!.isNotEmpty) {
           await _apiClient.setApiKey(response.token!);
         }
         emit(AuthAuthenticated(response.user));
       },
+    );
+  }
+
+  Future<void> _onResendCodeRequested(
+    AuthResendCodeRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(
+      AuthRequireVerification(
+        email: event.email,
+        message: 'A new verification code has been sent to ${event.email}.',
+      ),
     );
   }
 

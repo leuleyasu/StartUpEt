@@ -21,7 +21,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _phoneNumberController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _codeController = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
+  final _verifyFormKey = GlobalKey<FormState>();
 
   bool _isSignUp = false;
   bool _obscurePassword = true;
@@ -36,6 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _phoneNumberController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _codeController.dispose();
     super.dispose();
   }
 
@@ -43,23 +47,23 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       if (_isSignUp) {
         context.read<AuthBloc>().add(
-              AuthRegisterRequested(
-                firstName: _firstNameController.text.trim(),
-                lastName: _lastNameController.text.trim(),
-                email: _emailController.text.trim(),
-                phoneNumber: _phoneNumberController.text.trim(),
-                password: _passwordController.text,
-                confirmPassword: _confirmPasswordController.text,
-                role: _selectedRole,
-              ),
-            );
+          AuthRegisterRequested(
+            firstName: _firstNameController.text.trim(),
+            lastName: _lastNameController.text.trim(),
+            email: _emailController.text.trim(),
+            phoneNumber: _phoneNumberController.text.trim(),
+            password: _passwordController.text,
+            confirmPassword: _confirmPasswordController.text,
+            role: _selectedRole,
+          ),
+        );
       } else {
         context.read<AuthBloc>().add(
-              AuthLoginRequested(
-                email: _emailController.text.trim(),
-                password: _passwordController.text,
-              ),
-            );
+          AuthLoginRequested(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          ),
+        );
       }
     }
   }
@@ -91,18 +95,20 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.all(24),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
-                child: Form(
-                  key: _formKey,
+                child: state is AuthRequireVerification
+                    ? _buildVerificationForm(context, state)
+                    : Form(
+                        key: _formKey,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Image.asset('assets/logo.jpg', height: 80),
-                      const SizedBox(height: 16),
-                      Text(
-                        'StartupET',
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
+                      // const SizedBox(height: 16),
+                      // Text(
+                      //   'StartupET',
+                      //   style: Theme.of(context).textTheme.headlineMedium
+                      //       ?.copyWith(fontWeight: FontWeight.bold),
+                      // ),
                       const SizedBox(height: 4),
                       Text(
                         'Ethiopian Startup Ecosystem',
@@ -351,8 +357,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: state is AuthLoading ? null : _submitForm,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -378,9 +385,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         'Creating an account does not mean submitting a startup application.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                              fontStyle: FontStyle.italic,
-                            ),
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                       const SizedBox(height: 16),
 
@@ -403,6 +410,142 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildVerificationForm(
+      BuildContext context, AuthRequireVerification state) {
+    return Form(
+      key: _verifyFormKey,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.mark_email_read_outlined,
+              size: 56,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Verify Email Address',
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            state.message,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[700],
+                ),
+          ),
+          const SizedBox(height: 12),
+          Chip(
+            avatar: const Icon(Icons.email, size: 16),
+            label: Text(state.email),
+            backgroundColor: Colors.grey[200],
+          ),
+          const SizedBox(height: 28),
+          TextFormField(
+            controller: _codeController,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 24,
+              letterSpacing: 8,
+              fontWeight: FontWeight.bold,
+            ),
+            decoration: InputDecoration(
+              labelText: '6-Digit Verification Code',
+              hintText: '123456',
+              counterText: '',
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.pin),
+              filled: true,
+              fillColor: Colors.grey[100],
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter the 6-digit verification code';
+              }
+              if (value.trim().length < 6) {
+                return 'Verification code must be 6 digits';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () {
+                if (_verifyFormKey.currentState!.validate()) {
+                  context.read<AuthBloc>().add(
+                        AuthVerifyCodeRequested(
+                          email: state.email,
+                          code: _codeController.text.trim(),
+                        ),
+                      );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Verify & Continue',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: () {
+                  context.read<AuthBloc>().add(
+                        AuthResendCodeRequested(email: state.email),
+                      );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Resending verification code to ${state.email}...'),
+                    ),
+                  );
+                },
+                child: const Text('Resend Code'),
+              ),
+              const Text('•'),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isSignUp = false;
+                  });
+                  context.read<AuthBloc>().add(const AuthLogout());
+                },
+                child: const Text('Back to Sign In'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

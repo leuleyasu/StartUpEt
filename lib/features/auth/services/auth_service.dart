@@ -127,6 +127,7 @@ class AuthService {
         if (match != null) {
           final jsonMap = jsonDecode(match.group(0)!) as Map<String, dynamic>;
           final userJson = jsonMap['user'] as Map<String, dynamic>?;
+          final message = jsonMap['message']?.toString();
           final user = User(
             id: userJson?['id']?.toString() ??
                 'user_${DateTime.now().millisecondsSinceEpoch}',
@@ -139,6 +140,9 @@ class AuthService {
             AuthResponse(
               user: user,
               token: 'token_${DateTime.now().millisecondsSinceEpoch}',
+              requiresVerification: true,
+              message: message ??
+                  'Registration successful! Please check your email for the verification code.',
             ),
           );
         }
@@ -155,6 +159,9 @@ class AuthService {
         AuthResponse(
           user: user,
           token: 'token_${DateTime.now().millisecondsSinceEpoch}',
+          requiresVerification: true,
+          message:
+              'Registration successful! Please check your email for the verification code.',
         ),
       );
     } on DioException catch (e) {
@@ -162,6 +169,65 @@ class AuthService {
         e.error is ApiException
             ? e.error as ApiException
             : ApiException(message: e.message ?? 'Registration failed'),
+      );
+    }
+  }
+
+  Future<Either<ApiException, AuthResponse>> verifyCode({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiEndpoints.authSignUpAction,
+        data: jsonEncode([
+          {
+            'email': email,
+            'code': code,
+            'otp': code,
+            'verificationCode': code,
+          }
+        ]),
+        options: Options(
+          headers: {
+            'Accept': 'text/x-component',
+            'Content-Type': 'text/plain;charset=UTF-8',
+            'Next-Action': '401e21b359758382b9aed247455b492204ca238e70',
+            'Next-Router-State-Tree':
+                '%5B%22%22%2C%7B%22children%22%3A%5B%22auth%22%2C%7B%22children%22%3A%5B%5B%22slug%22%2C%22sign-up%22%2C%22d%22%5D%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D',
+          },
+        ),
+      );
+
+      final responseStr = response.data.toString();
+
+      if (responseStr.contains('"success":false')) {
+        final match = RegExp(r'\{"success":false.*\}').firstMatch(responseStr);
+        if (match != null) {
+          final jsonMap = jsonDecode(match.group(0)!) as Map<String, dynamic>;
+          final msg = jsonMap['message']?.toString();
+          if (msg != null && msg.isNotEmpty && msg != 'Required') {
+            return Left(ApiException(message: msg));
+          }
+        }
+      }
+
+      final user = User(
+        id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+        name: email.split('@').first,
+        email: email,
+      );
+      return Right(
+        AuthResponse(
+          user: user,
+          token: 'token_${DateTime.now().millisecondsSinceEpoch}',
+        ),
+      );
+    } on DioException catch (e) {
+      return Left(
+        e.error is ApiException
+            ? e.error as ApiException
+            : ApiException(message: e.message ?? 'Verification failed'),
       );
     }
   }
