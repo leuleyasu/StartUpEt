@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../models/user.dart';
+import '../../../models/user_session.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();
@@ -59,6 +60,15 @@ class AuthForgotPasswordSuccess extends AuthState {
 
   @override
   List<Object?> get props => [message];
+}
+
+class AuthSessionsLoaded extends AuthState {
+  final List<UserSessionInfo> sessions;
+
+  const AuthSessionsLoaded(this.sessions);
+
+  @override
+  List<Object?> get props => [sessions];
 }
 
 class AuthError extends AuthState {

@@ -6,6 +6,7 @@ import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import '../../bloc/auth_bloc.dart';
 import '../../bloc/auth_event.dart';
 import '../../bloc/auth_state.dart';
+import 'verify_email_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -24,7 +25,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _codeController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
-  final _verifyFormKey = GlobalKey<FormState>();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -70,7 +70,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthError) {
+          if (state is AuthRequireVerification) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => VerifyEmailScreen(initialEmail: state.email),
+              ),
+            );
+          } else if (state is AuthError) {
             final snackBar = SnackBar(
               elevation: 0,
               behavior: SnackBarBehavior.floating,
@@ -109,9 +116,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               padding: const EdgeInsets.all(24),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
-                child: state is AuthRequireVerification
-                    ? _buildVerificationForm(context, state)
-                    : _buildRegistrationForm(context, state),
+                child: _buildRegistrationForm(context, state),
               ),
             ),
           );
@@ -189,7 +194,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.email_outlined),
               filled: true,
-              fillColor: Colors.grey[100],
+              fillColor: Colors.white,
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -212,7 +217,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.phone_outlined),
               filled: true,
-              fillColor: Colors.grey[100],
+              fillColor: Colors.white,
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -230,7 +235,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.category_outlined),
               filled: true,
-              fillColor: Colors.grey[100],
+              fillColor: Colors.white,
             ),
             items: const [
               DropdownMenuItem(
@@ -281,7 +286,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
               filled: true,
-              fillColor: Colors.grey[100],
+              fillColor: Colors.white,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -316,7 +321,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
               filled: true,
-              fillColor: Colors.grey[100],
+              fillColor: Colors.white,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -358,145 +363,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Already have an account? Sign In'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVerificationForm(
-    BuildContext context,
-    AuthRequireVerification state,
-  ) {
-    return Form(
-      key: _verifyFormKey,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary
-                  .withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.mark_email_read_outlined,
-              size: 56,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Verify Email Address',
-            style: Theme.of(context).textTheme.headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            state.message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: Colors.grey[700]),
-          ),
-          const SizedBox(height: 12),
-          Chip(
-            avatar: const Icon(Icons.email, size: 16),
-            label: Text(state.email),
-            backgroundColor: Colors.grey[200],
-          ),
-          const SizedBox(height: 28),
-          TextFormField(
-            controller: _codeController,
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 24,
-              letterSpacing: 8,
-              fontWeight: FontWeight.bold,
-            ),
-            decoration: InputDecoration(
-              labelText: '6-Digit Verification Code',
-              hintText: '123456',
-              counterText: '',
-              border: const OutlineInputBorder(),
-              prefixIcon: const Icon(Icons.pin),
-              filled: true,
-              fillColor: Colors.grey[100],
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter the 6-digit verification code';
-              }
-              if (value.trim().length < 6) {
-                return 'Verification code must be 6 digits';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: state is AuthLoading
-                  ? null
-                  : () {
-                      if (_verifyFormKey.currentState!.validate()) {
-                        context.read<AuthBloc>().add(
-                          AuthVerifyCodeRequested(
-                            email: state.email,
-                            code: _codeController.text.trim(),
-                          ),
-                        );
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: state is AuthLoading
-                  ? const SpinKitThreeBounce(color: Colors.white, size: 20)
-                  : const Text(
-                      'Verify & Continue',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton(
-                onPressed: () {
-                  context.read<AuthBloc>().add(
-                    AuthResendCodeRequested(email: state.email),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Resending verification code to ${state.email}...',
-                      ),
-                    ),
-                  );
-                },
-                child: const Text('Resend Code'),
-              ),
-              const Text('•'),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Back to Sign In'),
-              ),
-            ],
           ),
         ],
       ),

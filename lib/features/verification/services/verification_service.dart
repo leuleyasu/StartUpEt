@@ -17,7 +17,7 @@ class VerificationService {
     try {
       final response = await _client.get(
         ApiEndpoints.verifyNationalId,
-        queryParameters: {'national_id': nationalId},
+        queryParameters: {'fcn': nationalId.trim()},
       );
       return Right(
         VerificationResult.fromJson(response.data as Map<String, dynamic>),
@@ -31,7 +31,7 @@ class VerificationService {
     try {
       final response = await _client.get(
         ApiEndpoints.verifyTin,
-        queryParameters: {'tin': tin},
+        queryParameters: {'tin': tin.trim()},
       );
       return Right(
         VerificationResult.fromJson(response.data as Map<String, dynamic>),

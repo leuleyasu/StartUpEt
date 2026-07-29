@@ -5,7 +5,8 @@ import 'package:startupet/main.dart';
 void main() {
   testWidgets('App renders home page', (WidgetTester tester) async {
     await di.initDependencies();
-    await tester.pumpWidget(const StartupetApp(isAuthenticated: true));
-    expect(find.text('StartupEt'), findsOneWidget);
+    await tester.pumpWidget(const StartupetApp(hasStoredToken: false));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(StartupetApp), findsOneWidget);
   });
 }

@@ -3,7 +3,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'api_config.dart';
 import 'api_exceptions.dart';
-
 import 'logging_interceptor.dart';
 import 'mock_interceptor.dart';
 
@@ -28,16 +27,27 @@ class ApiClient {
 
     _dio.interceptors.add(LoggingInterceptor());
     _dio.interceptors.add(MockInterceptor(enableOfflineMock: false));
-    _dio.interceptors.add(_apiKeyInterceptor());
+    _dio.interceptors.add(_authInterceptor());
     _dio.interceptors.add(_errorInterceptor());
   }
 
-  InterceptorsWrapper _apiKeyInterceptor() {
+  InterceptorsWrapper _authInterceptor() {
     return InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final key = await _getApiKey();
+        final key = await getToken();
         if (key.isNotEmpty) {
           options.headers[ApiConfig.apiKeyHeader] = key;
+          options.headers['Authorization'] = 'Bearer $key';
+
+          // Standard NextAuth cookie headers so getServerSession pick it up seamlessly
+          final existingCookie = options.headers['Cookie']?.toString() ?? '';
+          if (!existingCookie.contains('next-auth.session-token')) {
+            final sessionCookie =
+                'next-auth.session-token=$key; __Secure-next-auth.session-token=$key';
+            options.headers['Cookie'] = existingCookie.isEmpty
+                ? sessionCookie
+                : '$existingCookie; $sessionCookie';
+          }
         }
         handler.next(options);
       },
@@ -46,44 +56,45 @@ class ApiClient {
 
   InterceptorsWrapper _errorInterceptor() {
     return InterceptorsWrapper(
-      onError: (error, handler) {
-        switch (error.response?.statusCode) {
-          case 401:
-            return handler.reject(
-              DioException(
-                requestOptions: error.requestOptions,
-                error: UnauthorizedException(data: error.response?.data),
-              ),
-            );
-          case 403:
-            return handler.reject(
-              DioException(
-                requestOptions: error.requestOptions,
-                error: ForbiddenException(data: error.response?.data),
-              ),
-            );
-          case 404:
-            return handler.reject(
-              DioException(
-                requestOptions: error.requestOptions,
-                error: NotFoundException(data: error.response?.data),
-              ),
-            );
-          case 500:
-            return handler.reject(
-              DioException(
-                requestOptions: error.requestOptions,
-                error: ServerException(data: error.response?.data),
-              ),
-            );
-          default:
-            return handler.next(error);
+      onError: (error, handler) async {
+        final statusCode = error.response?.statusCode;
+        if (statusCode == 401) {
+          // If token was revoked or invalid, clear token from storage
+          await clearApiKey();
+          return handler.reject(
+            DioException(
+              requestOptions: error.requestOptions,
+              error: UnauthorizedException(data: error.response?.data),
+            ),
+          );
+        } else if (statusCode == 403) {
+          return handler.reject(
+            DioException(
+              requestOptions: error.requestOptions,
+              error: ForbiddenException(data: error.response?.data),
+            ),
+          );
+        } else if (statusCode == 404) {
+          return handler.reject(
+            DioException(
+              requestOptions: error.requestOptions,
+              error: NotFoundException(data: error.response?.data),
+            ),
+          );
+        } else if (statusCode == 500) {
+          return handler.reject(
+            DioException(
+              requestOptions: error.requestOptions,
+              error: ServerException(data: error.response?.data),
+            ),
+          );
         }
+        return handler.next(error);
       },
     );
   }
 
-  Future<String> _getApiKey() async {
+  Future<String> getToken() async {
     final stored = await _secureStorage.read(key: 'api_key');
     if (stored != null && stored.isNotEmpty) return stored;
     if (ApiConfig.defaultApiKey.isNotEmpty) {

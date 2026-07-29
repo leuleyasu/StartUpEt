@@ -101,6 +101,19 @@ class AuthForgotPasswordRequested extends AuthEvent {
   List<Object?> get props => [email];
 }
 
+class AuthFetchSessionsRequested extends AuthEvent {
+  const AuthFetchSessionsRequested();
+}
+
+class AuthTerminateSessionRequested extends AuthEvent {
+  final String sessionId;
+
+  const AuthTerminateSessionRequested(this.sessionId);
+
+  @override
+  List<Object?> get props => [sessionId];
+}
+
 class AuthLogout extends AuthEvent {
   const AuthLogout();
 }

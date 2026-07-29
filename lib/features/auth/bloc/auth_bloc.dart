@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/api_client.dart';
@@ -19,6 +19,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLoginWithFayda>(_onLoginWithFayda);
     on<AuthSetApiKey>(_onSetApiKey);
     on<AuthForgotPasswordRequested>(_onForgotPasswordRequested);
+    on<AuthFetchSessionsRequested>(_onFetchSessionsRequested);
+    on<AuthTerminateSessionRequested>(_onTerminateSessionRequested);
     on<AuthLogout>(_onLogout);
   }
 
@@ -34,7 +36,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await result.fold(
       (failure) async {
         debugPrint("Login Error: ${failure.message}");
-        emit(AuthError(failure.message));
+        final msgLower = failure.message.toLowerCase();
+        if (msgLower.contains('verify') || msgLower.contains('verified')) {
+          emit(
+            AuthRequireVerification(
+              email: event.email,
+              message: failure.message,
+            ),
+          );
+        } else {
+          emit(AuthError(failure.message));
+        }
       },
       (response) async {
         if (response.token != null && response.token!.isNotEmpty) {
@@ -140,7 +152,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await _authService.loginWithFayda(event.authCode);
     await result.fold(
       (failure) async {
-        debugPrint("Erorr:  ${failure.message}");
+        debugPrint("Fayda Auth Error: ${failure.message}");
         emit(AuthError(failure.message));
       },
       (response) async {
@@ -172,8 +184,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
+  Future<void> _onFetchSessionsRequested(
+    AuthFetchSessionsRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final result = await _authService.getUserSessions();
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (sessions) => emit(AuthSessionsLoaded(sessions)),
+    );
+  }
+
+  Future<void> _onTerminateSessionRequested(
+    AuthTerminateSessionRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final result = await _authService.terminateSession(event.sessionId);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => add(const AuthFetchSessionsRequested()),
+    );
+  }
+
   Future<void> _onLogout(AuthLogout event, Emitter<AuthState> emit) async {
-    await _apiClient.clearApiKey();
+    await _authService.logout();
     emit(const AuthUnauthenticated());
   }
 }

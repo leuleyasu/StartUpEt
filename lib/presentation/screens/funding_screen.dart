@@ -198,7 +198,7 @@ class _FundingScreenState extends State<FundingScreen> with SingleTickerProvider
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: (app['statusColor'] as Color).withOpacity(0.15),
+                color: (app['statusColor'] as Color).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
