@@ -130,14 +130,14 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             theme: BottomBarThemeData(
               barDecoration: BoxDecoration(
-                color: const Color(0xFF0F172A),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
+                  // BoxShadow(
+                  //   color: Colors.blue,
+                  //   blurRadius: 15,
+                  //   offset: const Offset(0, 5),
+                  // ),
                 ],
               ),
             ),
