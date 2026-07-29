@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../core/app_colors.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class NotificationsBottomSheet extends StatelessWidget {
+import '../../core/app_colors.dart';
+import '../../features/notification/bloc/notification_bloc.dart';
+import '../../features/notification/bloc/notification_event.dart';
+import '../../features/notification/bloc/notification_state.dart';
+
+class NotificationsBottomSheet extends StatefulWidget {
   const NotificationsBottomSheet({super.key});
 
   static void show(BuildContext context) {
@@ -14,42 +19,19 @@ class NotificationsBottomSheet extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> notifications = [
-      {
-        'title': 'Certification Status Update',
-        'message': 'Your startup application for "Startup Label" is currently under document review by the committee.',
-        'time': '10 mins ago',
-        'isRead': false,
-        'icon': Icons.assignment_turned_in,
-        'color': Colors.blue,
-      },
-      {
-        'title': 'New Grant Opportunity!',
-        'message': 'National Innovation Grant 2026 is now open for applications up to ETB 2,500,000.',
-        'time': '1 hour ago',
-        'isRead': false,
-        'icon': Icons.monetization_on,
-        'color': Colors.green,
-      },
-      {
-        'title': 'Fayda ID Verified',
-        'message': 'Your 16-digit Fayda National ID has been successfully verified with the central repository.',
-        'time': 'Yesterday',
-        'isRead': true,
-        'icon': Icons.verified,
-        'color': Colors.teal,
-      },
-      {
-        'title': 'Ecosystem Summit RSVP',
-        'message': 'Confirmation for Ethiopia Startup Summit 2026 at Millennium Hall.',
-        'time': '2 days ago',
-        'isRead': true,
-        'icon': Icons.event,
-        'color': Colors.purple,
-      },
-    ];
+  State<NotificationsBottomSheet> createState() =>
+      _NotificationsBottomSheetState();
+}
 
+class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<NotificationBloc>().add(const ConnectNotificationStream());
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -80,10 +62,7 @@ class NotificationsBottomSheet extends StatelessWidget {
                   SizedBox(width: 8),
                   Text(
                     'Notifications',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -91,7 +70,7 @@ class NotificationsBottomSheet extends StatelessWidget {
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: const Text('Mark all read'),
+                child: const Text('Close'),
               ),
             ],
           ),
@@ -100,53 +79,82 @@ class NotificationsBottomSheet extends StatelessWidget {
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.6,
             ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: notifications.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final n = notifications[index];
-                final isUnread = n['isRead'] == false;
-
-                return Container(
-                  color: isUnread ? AppColors.primary.withValues(alpha: 0.04) : Colors.transparent,
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: BlocBuilder<NotificationBloc, NotificationState>(
+              builder: (context, state) {
+                if (state is NotificationConnected) {
+                  final info = state.notification;
+                  return ListView(
+                    shrinkWrap: true,
                     children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: (n['color'] as Color).withValues(alpha: 0.15),
-                        child: Icon(n['icon'] as IconData, color: n['color'] as Color, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  n['title'],
-                                  style: TextStyle(
-                                    fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                Text(
-                                  n['time'],
-                                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                                ),
-                              ],
+                            const Icon(
+                              Icons.notifications,
+                              color: AppColors.primary,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              n['message'],
-                              style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    info.type ?? 'System Notification',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    info.message ?? 'No additional details',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
+                      ),
+                    ],
+                  );
+                }
+
+                // If stream is empty, initial, error or disconnected
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 32,
+                    horizontal: 16,
+                  ),
+                  alignment: Alignment.center,
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.notifications_none_outlined,
+                        size: 48,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'No New Notifications',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'You are all caught up with your startup applications and certs.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ),

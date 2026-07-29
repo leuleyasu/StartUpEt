@@ -14,7 +14,6 @@ import '../../../startup/bloc/startup_bloc.dart';
 import '../../../startup/bloc/startup_event.dart';
 import '../../../startup/bloc/startup_state.dart';
 import '../../bloc/auth_bloc.dart';
-import '../../bloc/auth_event.dart';
 import '../../bloc/auth_state.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -60,10 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ];
 
         return Scaffold(
-          body: IndexedStack(
-            index: _currentIndex,
-            children: pages,
-          ),
+          body: IndexedStack(index: _currentIndex, children: pages),
           bottomNavigationBar: Container(
             decoration: BoxDecoration(
               boxShadow: [
@@ -91,12 +87,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.assignment_outlined),
-                  selectedIcon: Icon(Icons.assignment, color: AppColors.primary),
+                  selectedIcon: Icon(
+                    Icons.assignment,
+                    color: AppColors.primary,
+                  ),
                   label: 'Application',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.workspace_premium_outlined),
-                  selectedIcon: Icon(Icons.workspace_premium, color: AppColors.primary),
+                  selectedIcon: Icon(
+                    Icons.workspace_premium,
+                    color: AppColors.primary,
+                  ),
                   label: 'Certifications',
                 ),
                 NavigationDestination(
@@ -258,16 +260,16 @@ class _StartupDashboardView extends StatelessWidget {
                     ),
                     onPressed: () => NotificationsBottomSheet.show(context),
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.logout_outlined,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    onPressed: () {
-                      context.read<AuthBloc>().add(const AuthLogout());
-                    },
-                  ),
+                  // IconButton(
+                  //   icon: const Icon(
+                  //     Icons.logout_outlined,
+                  //     color: Colors.white,
+                  //     size: 24,
+                  //   ),
+                  //   onPressed: () {
+                  //     context.read<AuthBloc>().add(const AuthLogout());
+                  //   },
+                  // ),
                 ],
               ),
             ),
@@ -328,12 +330,34 @@ class _StartupDashboardView extends StatelessWidget {
 
                     if (appState is ApplicationListLoaded) {
                       final apps = appState.applications;
-                      fundingApps = apps.where((a) => a.type == 'FUNDING' || a.data?['type'] == 'FUNDING').length;
-                      approvedApps = apps.where((a) => a.status.toUpperCase() == 'CERTIFIED' || a.status.toUpperCase() == 'APPROVED').length;
-                      pendingApps = apps.where((a) => a.status.toUpperCase() == 'PENDING' || a.status.toUpperCase() == 'UNDER_REVIEW').length;
+                      fundingApps = apps
+                          .where(
+                            (a) =>
+                                a.type == 'FUNDING' ||
+                                a.data?['type'] == 'FUNDING',
+                          )
+                          .length;
+                      approvedApps = apps
+                          .where(
+                            (a) =>
+                                a.status.toUpperCase() == 'CERTIFIED' ||
+                                a.status.toUpperCase() == 'APPROVED',
+                          )
+                          .length;
+                      pendingApps = apps
+                          .where(
+                            (a) =>
+                                a.status.toUpperCase() == 'PENDING' ||
+                                a.status.toUpperCase() == 'UNDER_REVIEW',
+                          )
+                          .length;
                     }
 
-                    final successRate = (fundingApps > 0) ? ((approvedApps / fundingApps) * 100).toStringAsFixed(0) : '0';
+                    final successRate = (fundingApps > 0)
+                        ? ((approvedApps / fundingApps) * 100).toStringAsFixed(
+                            0,
+                          )
+                        : '0';
 
                     return GridView.count(
                       shrinkWrap: true,
@@ -360,7 +384,9 @@ class _StartupDashboardView extends StatelessWidget {
                         _MetricCard(
                           title: 'Pending Reports',
                           value: '$pendingApps',
-                          subtitle: pendingApps > 0 ? '$pendingApps under review' : 'No pending reports',
+                          subtitle: pendingApps > 0
+                              ? '$pendingApps under review'
+                              : 'No pending reports',
                           icon: Icons.description_outlined,
                           color: Colors.amber.shade800,
                         ),
@@ -400,8 +426,7 @@ class _StartupDashboardView extends StatelessWidget {
 
                 _buildNoticeCard(
                   title: 'Ethiopian Startup Certification Proclamation 2026',
-                  description:
-                      'All applicants require Fayda National ID (FCN) verification for tax exemption eligibility.',
+                  description: 'All applicants require Fayda National ID (FCN) verification for tax exemption eligibility.',
                   time: 'Official Announcement',
                   icon: Icons.campaign,
                   color: AppColors.primary,
@@ -484,7 +509,12 @@ class _StartupDashboardView extends StatelessWidget {
     return BlocBuilder<StartupBloc, StartupState>(
       builder: (context, state) {
         if (state is StartupLoading) {
-          return const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()));
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(),
+            ),
+          );
         }
 
         if (state is StartupLoaded) {

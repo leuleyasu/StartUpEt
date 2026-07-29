@@ -14,30 +14,38 @@ class StartupService {
   Future<Either<ApiException, StartupStatus>> getMyStatus() async {
     try {
       final response = await _client.get(ApiEndpoints.startupMyStatus);
-      return Right(
-        StartupStatus.fromJson(response.data as Map<String, dynamic>),
-      );
+      final rawData = response.data;
+      if (rawData == null || rawData is! Map<String, dynamic>) {
+        return Left(ApiException(message: 'Invalid startup status payload'));
+      }
+      return Right(StartupStatus.fromJson(rawData));
     } on DioException catch (e) {
       return Left(
         e.error is ApiException
             ? e.error as ApiException
             : ApiException(message: e.message ?? 'Failed to fetch status'),
       );
+    } catch (e) {
+      return Left(ApiException(message: 'Error parsing startup status: $e'));
     }
   }
 
   Future<Either<ApiException, StartupStatus>> renew() async {
     try {
       final response = await _client.post(ApiEndpoints.startupRenew);
-      return Right(
-        StartupStatus.fromJson(response.data as Map<String, dynamic>),
-      );
+      final rawData = response.data;
+      if (rawData == null || rawData is! Map<String, dynamic>) {
+        return Left(ApiException(message: 'Invalid renewal status payload'));
+      }
+      return Right(StartupStatus.fromJson(rawData));
     } on DioException catch (e) {
       return Left(
         e.error is ApiException
             ? e.error as ApiException
             : ApiException(message: e.message ?? 'Renewal failed'),
       );
+    } catch (e) {
+      return Left(ApiException(message: 'Error parsing renewal status: $e'));
     }
   }
 }
