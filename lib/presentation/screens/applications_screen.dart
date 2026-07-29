@@ -58,68 +58,50 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
           if (state is ApplicationError) {
             final isNotFound =
                 state.message.contains('404') ||
-                state.message.toLowerCase().contains('not found');
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      isNotFound
-                          ? Icons.assignment_outlined
-                          : Icons.cloud_off_outlined,
-                      size: 56,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      isNotFound
-                          ? 'No Applications Found'
-                          : 'Unable to Load Applications',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                state.message.toLowerCase().contains('not found') ||
+                state.message.toLowerCase().contains('no applications');
+
+            if (!isNotFound) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.cloud_off_outlined,
+                        size: 56,
+                        color: Colors.grey[400],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      isNotFound
-                          ? 'You haven\'t submitted any startup certification applications yet.'
-                          : 'Please check your connection and tap retry to refresh.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            context.read<ApplicationBloc>().add(
-                              const FetchApplications(),
-                            );
-                          },
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Retry'),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Unable to Load Applications',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(width: 12),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () =>
-                              _showCreateApplicationDialog(context),
-                          icon: const Icon(Icons.add),
-                          label: const Text('New Application'),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Please check your connection and tap retry to refresh.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          context.read<ApplicationBloc>().add(
+                            const FetchApplications(),
+                          );
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
+              );
+            }
           }
 
           List<Application> apps = [];
@@ -128,6 +110,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
           }
 
           return TabBarView(
+            clipBehavior: Clip.none,
             controller: _tabController,
             children: [
               _buildApplicationsList(apps, null),
@@ -163,42 +146,72 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
         : allApps.where((a) => a.status.toUpperCase() == filterStatus).toList();
 
     if (filtered.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.assignment_outlined,
-                size: 64,
-                color: Colors.grey[400],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No applications found',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w600,
+      return RefreshIndicator(
+        onRefresh: () async {
+          context.read<ApplicationBloc>().add(const FetchApplications());
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(24, 60, 24, 100),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.assignment_outlined,
+                  size: 64,
+                  color: Colors.grey[400],
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                filterStatus == null
-                    ? 'Start your official Ethiopian Startup Certification process below.'
-                    : 'No applications match filter "$filterStatus".',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Colors.grey[500]),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Text(
+                  'No applications found',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  filterStatus == null
+                      ? 'Start your official Ethiopian Startup Certification process below.'
+                      : 'No applications match filter "$filterStatus".',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => _showCreateApplicationDialog(context),
+                  icon: const Icon(Icons.add),
+                  label: const Text(
+                    'Start New Application',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<ApplicationBloc>().add(const FetchApplications());
+      },
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final app = filtered[index];
@@ -245,7 +258,8 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
           ),
         );
       },
-    );
+    ),
+  );
   }
 
   Color _getStatusColor(String status) {
