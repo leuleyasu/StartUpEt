@@ -146,13 +146,54 @@ class _StartupDashboardView extends StatelessWidget {
 
     return CustomScrollView(
       slivers: [
-        // App Bar / Top Header
         SliverAppBar(
-          expandedHeight: 150.0,
+          expandedHeight: 140.0,
           floating: false,
           pinned: true,
           automaticallyImplyLeading: false,
           backgroundColor: const Color(0xFF0F172A),
+          title: Text(
+            'Welcome, $firstName!',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: Stack(
+                children: [
+                  const Icon(
+                    Icons.notifications_outlined,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text(
+                        '!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              onPressed: () => NotificationsBottomSheet.show(context),
+            ),
+            const SizedBox(width: 8),
+          ],
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
               decoration: const BoxDecoration(
@@ -162,45 +203,35 @@ class _StartupDashboardView extends StatelessWidget {
                   end: Alignment.bottomRight,
                 ),
               ),
-              padding: const EdgeInsets.fromLTRB(20, 48, 20, 16),
+              padding: const EdgeInsets.fromLTRB(20, 75, 20, 12),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   CircleAvatar(
-                    radius: 26,
+                    radius: 22,
                     backgroundColor: AppColors.primary,
                     child: Text(
                       initials,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 15,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'StartupET',
+                          'StartupET Mobile Dashboard',
                           style: TextStyle(
                             color: Colors.grey[400],
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Welcome, $firstName!',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -229,47 +260,6 @@ class _StartupDashboardView extends StatelessWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: Stack(
-                      children: [
-                        const Icon(
-                          Icons.notifications_outlined,
-                          color: Colors.white,
-                          size: 26,
-                        ),
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Text(
-                              '!',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    onPressed: () => NotificationsBottomSheet.show(context),
-                  ),
-                  // IconButton(
-                  //   icon: const Icon(
-                  //     Icons.logout_outlined,
-                  //     color: Colors.white,
-                  //     size: 24,
-                  //   ),
-                  //   onPressed: () {
-                  //     context.read<AuthBloc>().add(const AuthLogout());
-                  //   },
-                  // ),
                 ],
               ),
             ),

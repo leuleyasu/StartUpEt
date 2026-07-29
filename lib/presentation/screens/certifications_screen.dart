@@ -52,7 +52,8 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                 }
 
                 if (state is StartupError) {
-                  final isNotFound = state.message.contains('404') ||
+                  final isNotFound =
+                      state.message.contains('404') ||
                       state.message.toLowerCase().contains('not found');
 
                   return Card(
@@ -65,7 +66,11 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                       padding: const EdgeInsets.all(24),
                       child: Column(
                         children: [
-                          Icon(Icons.workspace_premium_outlined, size: 56, color: Colors.grey[400]),
+                          Icon(
+                            Icons.workspace_premium_outlined,
+                            size: 56,
+                            color: Colors.grey[400],
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             isNotFound
@@ -82,7 +87,10 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                                 ? 'Apply for startup certification to receive your official tax exemption label and benefits.'
                                 : 'Unable to retrieve your startup label status at this moment.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
@@ -91,7 +99,9 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                               foregroundColor: Colors.white,
                             ),
                             onPressed: () {
-                              context.read<StartupBloc>().add(const FetchStartupStatus());
+                              context.read<StartupBloc>().add(
+                                const FetchStartupStatus(),
+                              );
                             },
                             icon: const Icon(Icons.refresh),
                             label: const Text('Refresh Status'),
@@ -108,7 +118,8 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                   final isCertified = status == 'CERTIFIED';
                   final sector = startup.sector ?? 'General Technology';
                   final stage = startup.stage ?? 'Initial Stage';
-                  final expiry = startup.membershipExpiresAt ?? 'Pending Renewal';
+                  final expiry =
+                      startup.membershipExpiresAt ?? 'Pending Renewal';
 
                   return Card(
                     elevation: 3,
@@ -120,7 +131,10 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                         borderRadius: BorderRadius.circular(20),
                         gradient: LinearGradient(
                           colors: isCertified
-                              ? [const Color(0xFF0F766E), const Color(0xFF0D9488)]
+                              ? [
+                                  const Color(0xFF0F766E),
+                                  const Color(0xFF0D9488),
+                                ]
                               : [Colors.orange.shade800, Colors.amber.shade700],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -241,15 +255,17 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: const Color(0xFF0F766E),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                               onPressed: () {
                                 context.read<CertificateBloc>().add(
-                                      DownloadCertificate(startup.id),
-                                    );
+                                  DownloadCertificate(startup.id),
+                                );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(
@@ -283,7 +299,11 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       children: [
-                        Icon(Icons.workspace_premium_outlined, size: 56, color: Colors.grey[400]),
+                        Icon(
+                          Icons.workspace_premium_outlined,
+                          size: 56,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 12),
                         const Text(
                           'No Active Startup Certificate',
@@ -296,7 +316,10 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                         Text(
                           'Submit a startup application to obtain your official Ethiopian Startup Label certification.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
                     ),
@@ -316,24 +339,21 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
             const SizedBox(height: 12),
             _benefitCard(
               title: 'Tax Exemption & Duties Relief',
-              description:
-                  'Eligible for 3-5 year corporate tax holiday under the Ethiopian Startup Proclamation.',
+              description: 'Eligible for 3-5 year corporate tax holiday under the Ethiopian Startup Proclamation.',
               icon: Icons.account_balance,
               color: Colors.indigo,
             ),
             const SizedBox(height: 10),
             _benefitCard(
               title: 'Customs & Equipment Duty Waiver',
-              description:
-                  'Waived import duties on essential tech hardware and R&D machinery.',
+              description: 'Waived import duties on essential tech hardware and R&D machinery.',
               icon: Icons.local_shipping,
               color: Colors.blue,
             ),
             const SizedBox(height: 10),
             _benefitCard(
               title: 'Priority National Innovation Fund',
-              description:
-                  'Direct access to government grant allocations and interest-subsidized venture debt.',
+              description: 'Direct access to government grant allocations and interest-subsidized venture debt.',
               icon: Icons.star,
               color: Colors.amber.shade800,
             ),
