@@ -138,13 +138,17 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        onPressed: () => _showCreateApplicationDialog(context),
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'New Application',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 85),
+        child: FloatingActionButton.extended(
+          backgroundColor: AppColors.primary,
+          elevation: 6,
+          onPressed: () => _showCreateApplicationDialog(context),
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const Text(
+            'New Application',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );
@@ -161,7 +165,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
     if (filtered.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -194,7 +198,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final app = filtered[index];

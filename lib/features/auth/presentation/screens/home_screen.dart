@@ -499,7 +499,7 @@ class _StartupDashboardView extends StatelessWidget {
 
                 // Startup Certification Status Preview Card
                 _buildCertificationPreviewCard(context),
-                const SizedBox(height: 20),
+                const SizedBox(height: 100),
               ],
             ),
           ),
