@@ -40,8 +40,11 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          padding: EdgeInsets.zero,
           indicatorColor: AppColors.primary,
           labelColor: AppColors.primary,
+          unselectedLabelColor: Colors.grey[600],
           tabs: const [
             Tab(text: 'All'),
             Tab(text: 'Under Review'),
@@ -212,54 +215,58 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
       },
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-      itemCount: filtered.length,
-      itemBuilder: (context, index) {
-        final app = filtered[index];
-        final statusColor = _getStatusColor(app.status);
+        itemCount: filtered.length,
+        itemBuilder: (context, index) {
+          final app = filtered[index];
+          final statusColor = _getStatusColor(app.status);
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: CircleAvatar(
-              backgroundColor: statusColor.withValues(alpha: 0.15),
-              child: Icon(Icons.description, color: statusColor),
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            title: Text(
-              app.data?['startupName']?.toString() ?? 'Startup Application',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text('ID: ${app.id}'),
-                if (app.createdAt != null) Text('Submitted: ${app.createdAt}'),
-              ],
-            ),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
+              leading: CircleAvatar(
+                backgroundColor: statusColor.withValues(alpha: 0.15),
+                child: Icon(Icons.description, color: statusColor),
               ),
-              child: Text(
-                app.status.toUpperCase(),
-                style: TextStyle(
-                  color: statusColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
+              title: Text(
+                app.data?['startupName']?.toString() ?? 'Startup Application',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 4),
+                  Text('ID: ${app.id}'),
+                  if (app.createdAt != null)
+                    Text('Submitted: ${app.createdAt}'),
+                ],
+              ),
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  app.status.toUpperCase(),
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      },
-    ),
-  );
+          );
+        },
+      ),
+    );
   }
 
   Color _getStatusColor(String status) {
