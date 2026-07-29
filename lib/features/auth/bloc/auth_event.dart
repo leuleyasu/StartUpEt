@@ -117,3 +117,32 @@ class AuthTerminateSessionRequested extends AuthEvent {
 class AuthLogout extends AuthEvent {
   const AuthLogout();
 }
+
+class AuthUpdateProfileRequested extends AuthEvent {
+  final String? firstName;
+  final String? lastName;
+  final String? name;
+  final String? phone;
+  final String? address;
+  final String? image;
+
+  const AuthUpdateProfileRequested({
+    this.firstName,
+    this.lastName,
+    this.name,
+    this.phone,
+    this.address,
+    this.image,
+  });
+
+  @override
+  List<Object?> get props => [
+        firstName,
+        lastName,
+        name,
+        phone,
+        address,
+        image,
+      ];
+}
+

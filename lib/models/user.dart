@@ -75,4 +75,34 @@ class User {
         if (twoStepAuthEnabled != null) 'twoStepAuthEnabled': twoStepAuthEnabled,
         if (permissions.isNotEmpty) 'permissions': permissions,
       };
+
+  User copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? role,
+    String? phone,
+    String? firstName,
+    String? lastName,
+    String? stakeholderId,
+    String? address,
+    String? image,
+    bool? twoStepAuthEnabled,
+    List<String>? permissions,
+  }) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      phone: phone ?? this.phone,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      stakeholderId: stakeholderId ?? this.stakeholderId,
+      address: address ?? this.address,
+      image: image ?? this.image,
+      twoStepAuthEnabled: twoStepAuthEnabled ?? this.twoStepAuthEnabled,
+      permissions: permissions ?? this.permissions,
+    );
+  }
 }

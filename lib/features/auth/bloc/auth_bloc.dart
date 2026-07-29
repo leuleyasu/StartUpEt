@@ -22,6 +22,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthFetchSessionsRequested>(_onFetchSessionsRequested);
     on<AuthTerminateSessionRequested>(_onTerminateSessionRequested);
     on<AuthLogout>(_onLogout);
+    on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
   }
 
   Future<void> _onLoginRequested(
@@ -209,5 +210,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onLogout(AuthLogout event, Emitter<AuthState> emit) async {
     await _authService.logout();
     emit(const AuthUnauthenticated());
+  }
+
+  Future<void> _onUpdateProfileRequested(
+    AuthUpdateProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final previousState = state;
+    final currentUser =
+        previousState is AuthAuthenticated ? previousState.user : null;
+
+    emit(const AuthLoading());
+    final result = await _authService.updateProfile(
+      firstName: event.firstName,
+      lastName: event.lastName,
+      name: event.name,
+      phone: event.phone,
+      address: event.address,
+      image: event.image,
+    );
+
+    result.fold(
+      (failure) {
+        emit(AuthError(failure.message));
+        if (currentUser != null) {
+          emit(AuthAuthenticated(currentUser));
+        }
+      },
+      (updatedUser) {
+        emit(AuthAuthenticated(updatedUser));
+      },
+    );
   }
 }

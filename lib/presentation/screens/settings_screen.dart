@@ -6,6 +6,7 @@ import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/bloc/auth_event.dart';
 import '../../features/auth/bloc/auth_state.dart';
 import '../widgets/notifications_bottom_sheet.dart';
+import 'edit_profile_screen.dart';
 import 'verification_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -41,16 +42,21 @@ class SettingsScreen extends StatelessWidget {
                         CircleAvatar(
                           radius: 32,
                           backgroundColor: AppColors.primary,
-                          child: Text(
-                            userName.isNotEmpty
-                                ? userName[0].toUpperCase()
-                                : 'L',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          backgroundImage: user?.image != null && user!.image!.isNotEmpty
+                              ? NetworkImage(user.image!)
+                              : null,
+                          child: (user?.image == null || user!.image!.isEmpty)
+                              ? Text(
+                                  userName.isNotEmpty
+                                      ? userName[0].toUpperCase()
+                                      : 'L',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              : null,
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -96,6 +102,18 @@ class SettingsScreen extends StatelessWidget {
                             ],
                           ),
                         ),
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+                          tooltip: 'Edit Profile',
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EditProfileScreen(user: user),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -111,6 +129,23 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
+
+                // Edit Profile Option
+                _settingsOptionTile(
+                  context,
+                  title: 'Edit Profile Information',
+                  subtitle: 'Update name, phone number, location & avatar',
+                  icon: Icons.person_outline,
+                  iconColor: AppColors.primary,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditProfileScreen(user: user),
+                      ),
+                    );
+                  },
+                ),
 
                 // Notifications Option
                 _settingsOptionTile(

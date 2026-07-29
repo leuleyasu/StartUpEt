@@ -56,7 +56,8 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
             return const Center(child: CircularProgressIndicator());
           }
           if (state is ApplicationError) {
-            final isNotFound = state.message.contains('404') ||
+            final isNotFound =
+                state.message.contains('404') ||
                 state.message.toLowerCase().contains('not found');
             return Center(
               child: Padding(
@@ -95,9 +96,9 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
                       children: [
                         OutlinedButton.icon(
                           onPressed: () {
-                            context
-                                .read<ApplicationBloc>()
-                                .add(const FetchApplications());
+                            context.read<ApplicationBloc>().add(
+                              const FetchApplications(),
+                            );
                           },
                           icon: const Icon(Icons.refresh),
                           label: const Text('Retry'),
@@ -149,7 +150,10 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
     );
   }
 
-  Widget _buildApplicationsList(List<Application> allApps, String? filterStatus) {
+  Widget _buildApplicationsList(
+    List<Application> allApps,
+    String? filterStatus,
+  ) {
     final filtered = filterStatus == null
         ? allApps
         : allApps.where((a) => a.status.toUpperCase() == filterStatus).toList();
@@ -161,7 +165,11 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.assignment_outlined, size: 64, color: Colors.grey[400]),
+              Icon(
+                Icons.assignment_outlined,
+                size: 64,
+                color: Colors.grey[400],
+              ),
               const SizedBox(height: 16),
               Text(
                 'No applications found',
@@ -194,7 +202,9 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: ListTile(
             contentPadding: const EdgeInsets.all(16),
             leading: CircleAvatar(

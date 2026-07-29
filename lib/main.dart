@@ -36,11 +36,8 @@ void main() async {
 class StartupetApp extends StatelessWidget {
   final bool hasStoredToken;
 
-  const StartupetApp({
-    super.key,
-    bool? isAuthenticated,
-    bool? hasStoredToken,
-  }) : hasStoredToken = hasStoredToken ?? isAuthenticated ?? false;
+  const StartupetApp({super.key, bool? isAuthenticated, bool? hasStoredToken})
+    : hasStoredToken = hasStoredToken ?? isAuthenticated ?? false;
 
   @override
   Widget build(BuildContext context) {
@@ -55,17 +52,50 @@ class StartupetApp extends StatelessWidget {
             return bloc;
           },
         ),
-        BlocProvider<StartupBloc>(lazy: true, create: (context) => di.sl<StartupBloc>()),
-        BlocProvider<ApplicationBloc>(lazy: true, create: (context) => di.sl<ApplicationBloc>()),
-        BlocProvider<FundingBloc>(lazy: true, create: (context) => di.sl<FundingBloc>()),
-        BlocProvider<EventBloc>(lazy: true, create: (context) => di.sl<EventBloc>()),
-        BlocProvider<EcosystemBloc>(lazy: true, create: (context) => di.sl<EcosystemBloc>()),
-        BlocProvider<CertificateBloc>(lazy: true, create: (context) => di.sl<CertificateBloc>()),
-        BlocProvider<NotificationBloc>(lazy: true, create: (context) => di.sl<NotificationBloc>()),
-        BlocProvider<VerificationBloc>(lazy: true, create: (context) => di.sl<VerificationBloc>()),
-        BlocProvider<PitchBloc>(lazy: true, create: (context) => di.sl<PitchBloc>()),
-        BlocProvider<FileBloc>(lazy: true, create: (context) => di.sl<FileBloc>()),
-        BlocProvider<CronBloc>(lazy: true, create: (context) => di.sl<CronBloc>()),
+        BlocProvider<StartupBloc>(
+          lazy: true,
+          create: (context) => di.sl<StartupBloc>(),
+        ),
+        BlocProvider<ApplicationBloc>(
+          lazy: true,
+          create: (context) => di.sl<ApplicationBloc>(),
+        ),
+        BlocProvider<FundingBloc>(
+          lazy: true,
+          create: (context) => di.sl<FundingBloc>(),
+        ),
+        BlocProvider<EventBloc>(
+          lazy: true,
+          create: (context) => di.sl<EventBloc>(),
+        ),
+        BlocProvider<EcosystemBloc>(
+          lazy: true,
+          create: (context) => di.sl<EcosystemBloc>(),
+        ),
+        BlocProvider<CertificateBloc>(
+          lazy: true,
+          create: (context) => di.sl<CertificateBloc>(),
+        ),
+        BlocProvider<NotificationBloc>(
+          lazy: true,
+          create: (context) => di.sl<NotificationBloc>(),
+        ),
+        BlocProvider<VerificationBloc>(
+          lazy: true,
+          create: (context) => di.sl<VerificationBloc>(),
+        ),
+        BlocProvider<PitchBloc>(
+          lazy: true,
+          create: (context) => di.sl<PitchBloc>(),
+        ),
+        BlocProvider<FileBloc>(
+          lazy: true,
+          create: (context) => di.sl<FileBloc>(),
+        ),
+        BlocProvider<CronBloc>(
+          lazy: true,
+          create: (context) => di.sl<CronBloc>(),
+        ),
       ],
       child: MaterialApp(
         title: 'StartupEt',
@@ -136,10 +166,7 @@ class _AuthGateState extends State<AuthGate> {
         if (_isCheckingInitialAuth && state is AuthLoading) {
           return const Scaffold(
             body: Center(
-              child: SpinKitThreeBounce(
-                color: AppColors.primary,
-                size: 30,
-              ),
+              child: SpinKitThreeBounce(color: AppColors.primary, size: 30),
             ),
           );
         }

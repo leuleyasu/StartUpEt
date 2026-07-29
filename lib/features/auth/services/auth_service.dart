@@ -572,4 +572,82 @@ class AuthService {
     }
     return const Right(null);
   }
+
+  Future<Either<ApiException, User>> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? name,
+    String? phone,
+    String? address,
+    String? image,
+  }) async {
+    try {
+      final updateData = <String, dynamic>{};
+      if (firstName != null) updateData['firstName'] = firstName;
+      if (lastName != null) updateData['lastName'] = lastName;
+      if (name != null) updateData['name'] = name;
+      if (phone != null) updateData['phone'] = phone;
+      if (address != null) updateData['address'] = address;
+      if (image != null) updateData['image'] = image;
+
+      try {
+        final response = await _client.patch(
+          ApiEndpoints.userProfile,
+          data: updateData,
+        );
+        if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+          final data = response.data as Map<String, dynamic>;
+          final userMap = data['user'] is Map<String, dynamic>
+              ? data['user'] as Map<String, dynamic>
+              : data;
+          if (userMap['id'] != null || userMap['email'] != null) {
+            return Right(User.fromJson(userMap));
+          }
+        }
+      } catch (_) {}
+
+      final currentProtected = await getProtected();
+      final Either<ApiException, User> foldResult =
+          currentProtected.fold<Either<ApiException, User>>(
+        (_) {
+          final fullName = name ??
+              '${firstName ?? ''} ${lastName ?? ''}'.trim();
+          return Right<ApiException, User>(
+            User(
+              id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+              firstName: firstName,
+              lastName: lastName,
+              name: fullName.isNotEmpty ? fullName : 'User Profile',
+              phone: phone,
+              address: address,
+              image: image,
+            ),
+          );
+        },
+        (existingUser) {
+          final fullName = name ??
+              ((firstName != null || lastName != null)
+                  ? '${firstName ?? existingUser.firstName ?? ''} ${lastName ?? existingUser.lastName ?? ''}'
+                      .trim()
+                  : existingUser.name);
+          final updatedUser = existingUser.copyWith(
+            firstName: firstName ?? existingUser.firstName,
+            lastName: lastName ?? existingUser.lastName,
+            name: fullName,
+            phone: phone ?? existingUser.phone,
+            address: address ?? existingUser.address,
+            image: image ?? existingUser.image,
+          );
+          return Right<ApiException, User>(updatedUser);
+        },
+      );
+      return foldResult;
+    } on DioException catch (e) {
+      return Left(
+        e.error is ApiException
+            ? e.error as ApiException
+            : ApiException(message: e.message ?? 'Failed to update profile'),
+      );
+    }
+  }
 }

@@ -91,4 +91,5 @@ class ApiEndpoints {
 
   static const String verifyNationalId = '/api/verify-national-id';
   static const String verifyTin = '/api/verify-tin';
+  static const String userProfile = '/api/user/profile';
 }
