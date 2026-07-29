@@ -30,8 +30,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<StartupBloc>().add(const FetchStartupStatus());
-    context.read<ApplicationBloc>().add(const FetchApplications());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<StartupBloc>().add(const FetchStartupStatus());
+        context.read<ApplicationBloc>().add(const FetchApplications());
+      }
+    });
   }
 
   @override
