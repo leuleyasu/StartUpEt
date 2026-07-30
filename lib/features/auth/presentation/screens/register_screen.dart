@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:startupet/core/app_colors.dart';
 
 import '../../bloc/auth_bloc.dart';
 import '../../bloc/auth_event.dart';
@@ -28,7 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  String _selectedRole = 'STARTUP_INDIVIDUAL';
+  String _selectedRole = 'USER';
 
   @override
   void dispose() {
@@ -61,6 +62,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Create Account'),
         leading: IconButton(
@@ -131,8 +133,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset('assets/logo.jpg', height: 70),
-          const SizedBox(height: 12),
+          Image.asset('assets/logo.png', height: 50),
+          const SizedBox(height: 20),
           Text(
             'Ethiopian Startup Ecosystem',
             style: Theme.of(context).textTheme.bodyMedium
@@ -146,6 +148,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: TextFormField(
                   controller: _firstNameController,
                   decoration: InputDecoration(
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     labelText: 'First Name',
                     hintText: 'LEUL',
                     border: const OutlineInputBorder(),
@@ -166,6 +179,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: TextFormField(
                   controller: _lastNameController,
                   decoration: InputDecoration(
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     labelText: 'Last Name',
                     hintText: 'EYASU',
                     border: const OutlineInputBorder(),
@@ -189,6 +206,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
               labelText: 'Email Address',
               hintText: 'leuleyasu7@gmail.com',
               border: const OutlineInputBorder(),
@@ -212,6 +233,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _phoneNumberController,
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
               labelText: 'Phone Number',
               hintText: '+251945138889',
               border: const OutlineInputBorder(),
@@ -231,6 +256,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           DropdownButtonFormField<String>(
             initialValue: _selectedRole,
             decoration: InputDecoration(
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
               labelText: 'Role / Category',
               border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.category_outlined),
@@ -239,12 +268,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             items: const [
               DropdownMenuItem(
-                value: 'STARTUP_INDIVIDUAL',
-                child: Text('Startup (Individual)'),
-              ),
-              DropdownMenuItem(
-                value: 'STARTUP_COMPANY',
-                child: Text('Startup (Company)'),
+                value: 'USER',
+                child: Text('Startup (Individual/Company)'),
               ),
               DropdownMenuItem(
                 value: 'ECOSYSTEM_BUILDER',
@@ -271,6 +296,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _passwordController,
             obscureText: _obscurePassword,
             decoration: InputDecoration(
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
               labelText: 'Password',
               hintText: 'Enter your password',
               border: const OutlineInputBorder(),
@@ -304,6 +333,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _confirmPasswordController,
             obscureText: _obscureConfirmPassword,
             decoration: InputDecoration(
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
               labelText: 'Confirm Password',
               hintText: 'Re-enter your password',
               border: const OutlineInputBorder(),

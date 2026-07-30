@@ -46,6 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthRequireVerification) {
@@ -85,14 +86,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset('assets/logo.jpg', height: 80),
+                      Image.asset('assets/logo.png', height: 50),
                       // const SizedBox(height: 12),
                       // Text(
                       //   'StartupET',
                       //   style: Theme.of(context).textTheme.headlineMedium
                       //       ?.copyWith(fontWeight: FontWeight.bold),
                       // ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 20),
                       Text(
                         'Ethiopian Startup Ecosystem',
                         style: Theme.of(context).textTheme.bodyMedium
@@ -106,6 +107,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             labelText: 'Email Address',
                             hintText: 'name@example.com',
                             border: const OutlineInputBorder(),
@@ -130,6 +137,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           labelText: 'Password',
                           hintText: 'Enter your password',
                           border: const OutlineInputBorder(),

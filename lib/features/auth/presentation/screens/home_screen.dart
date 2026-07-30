@@ -150,7 +150,9 @@ class _HomeScreenState extends State<HomeScreen>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: TabBar(
                 controller: _tabController,
+                indicator: const BoxDecoration(),
                 indicatorColor: Colors.transparent,
+                indicatorWeight: 0,
                 dividerColor: Colors.transparent,
                 labelPadding: EdgeInsets.zero,
                 tabs: [

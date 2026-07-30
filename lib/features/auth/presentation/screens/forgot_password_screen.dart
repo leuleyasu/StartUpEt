@@ -36,6 +36,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(title: const Text('Forgot Password')),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
@@ -81,8 +82,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset('assets/logo.jpg', height: 80),
-                      const SizedBox(height: 16),
+                      Image.asset('assets/logo.png', height: 50),
+                      const SizedBox(height: 20),
                       Text(
                         'Reset Password',
                         style: Theme.of(context).textTheme.headlineSmall
@@ -100,6 +101,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           labelText: 'Email Address',
                           hintText: 'name@example.com',
                           border: const OutlineInputBorder(),

@@ -50,7 +50,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     final email = _emailController.text.trim();
     if (email.isEmpty || !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email address first.')),
+        const SnackBar(
+          content: Text('Please enter a valid email address first.'),
+        ),
       );
       return;
     }
@@ -73,6 +75,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Verify Email'),
         leading: IconButton(
@@ -153,11 +156,15 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           labelText: 'Email Address',
                           hintText: 'name@example.com',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.email_outlined),
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.email_outlined),
                           filled: true,
                           fillColor: Colors.white,
                         ),
@@ -182,7 +189,11 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                           letterSpacing: 8,
                           fontWeight: FontWeight.bold,
                         ),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           labelText: '6-Digit Verification Code',
                           hintText: '123456',
                           counterText: '',
@@ -206,7 +217,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: state is AuthLoading ? null : _submitVerification,
+                          onPressed: state is AuthLoading
+                              ? null
+                              : _submitVerification,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
@@ -234,7 +247,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           TextButton(
-                            onPressed: state is AuthLoading ? null : _resendCode,
+                            onPressed: state is AuthLoading
+                                ? null
+                                : _resendCode,
                             child: const Text('Resend Code'),
                           ),
                           const Text('•'),
