@@ -410,62 +410,23 @@ class AuthService {
         }
       } catch (_) {}
 
-      // 2. Attempt Next.js Server Action
-      try {
-        final response = await _client.post(
-          ApiEndpoints.authForgotPasswordAction,
-          data: jsonEncode([
-            {'email': cleanEmail},
-          ]),
-          options: Options(
-            headers: {
-              'Accept': 'text/x-component',
-              'Content-Type': 'text/plain;charset=UTF-8',
-              'Next-Action': '405d83520a033ea4431ced211875cf60bf06c0635f',
-              'Next-Router-State-Tree':
-                  '%5B%22%22%2C%7B%22children%22%3A%5B%22auth%22%2C%7B%22children%22%3A%5B%22forgot-password%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D',
-              'Origin': ApiConfig.baseUrl,
-              'Referer': '${ApiConfig.baseUrl}/auth/forgot-password',
-              if (cookieHeader != null) 'Cookie': cookieHeader,
-            },
-          ),
-        );
-
-        final responseStr = response.data.toString();
-
-        // Check if RSC payload contains explicit failure
-        final errorMatch = RegExp(r'\{"success":false.*\}|\{"error":.*\}').firstMatch(responseStr);
-        if (errorMatch != null) {
-          try {
-            final jsonMap = jsonDecode(errorMatch.group(0)!) as Map<String, dynamic>;
-            final msg = jsonMap['message']?.toString() ??
-                jsonMap['error']?.toString() ??
-                'Failed to send reset link.';
-            return Left(ApiException(message: msg));
-          } catch (_) {}
-        }
-
-        // Check if RSC payload contains explicit success
-        final successMatch = RegExp(r'\{"success":true.*\}').firstMatch(responseStr);
-        if (successMatch != null) {
-          try {
-            final jsonMap = jsonDecode(successMatch.group(0)!) as Map<String, dynamic>;
-            final msg = jsonMap['message']?.toString() ??
-                'If an account exists with that email, a password reset link has been sent.';
-            return Right(msg);
-          } catch (_) {}
-        }
-
-        if (response.statusCode == 200) {
-          return const Right(
-            'If an account exists with that email, a password reset link has been sent.',
-          );
-        }
-      } catch (_) {}
-
-      return const Right(
-        'If an account exists with that email, a password reset link has been sent.',
+      // 2. Try single string parameter payload: ["email@example.com"]
+      final resStringParam = await _postForgotPasswordAction(
+        payload: jsonEncode([cleanEmail]),
+        cookieHeader: cookieHeader,
       );
+      if (resStringParam.isRight()) return resStringParam;
+
+      // 3. Fall back to map parameter payload: [{"email": "email@example.com"}]
+      final resMapParam = await _postForgotPasswordAction(
+        payload: jsonEncode([
+          {'email': cleanEmail},
+        ]),
+        cookieHeader: cookieHeader,
+      );
+      if (resMapParam.isRight()) return resMapParam;
+
+      return resStringParam;
     } on DioException catch (e) {
       String errorMsg = 'Password reset request failed.';
       final data = e.response?.data;
@@ -475,6 +436,67 @@ class AuthService {
         return Left(e.error as ApiException);
       }
       return Left(ApiException(message: errorMsg));
+    }
+  }
+
+  Future<Either<ApiException, String>> _postForgotPasswordAction({
+    required String payload,
+    String? cookieHeader,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiEndpoints.authForgotPasswordAction,
+        data: payload,
+        options: Options(
+          headers: {
+            'Accept': 'text/x-component',
+            'Content-Type': 'text/plain;charset=UTF-8',
+            'Next-Action': '405d83520a033ea4431ced211875cf60bf06c0635f',
+            'Next-Router-State-Tree':
+                '%5B%22%22%2C%7B%22children%22%3A%5B%22auth%22%2C%7B%22children%22%3A%5B%22forgot-password%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D',
+            'Origin': ApiConfig.baseUrl,
+            'Referer': '${ApiConfig.baseUrl}/auth/forgot-password',
+            if (cookieHeader != null) 'Cookie': cookieHeader,
+          },
+        ),
+      );
+
+      final responseStr = response.data.toString();
+
+      final errorMatch =
+          RegExp(r'\{"success":false.*\}|\{"error":.*\}').firstMatch(responseStr);
+      if (errorMatch != null) {
+        try {
+          final jsonMap =
+              jsonDecode(errorMatch.group(0)!) as Map<String, dynamic>;
+          final msg = jsonMap['message']?.toString() ??
+              jsonMap['error']?.toString() ??
+              'Failed to send reset link.';
+          return Left(ApiException(message: msg));
+        } catch (_) {}
+      }
+
+      final successMatch =
+          RegExp(r'\{"success":true.*\}').firstMatch(responseStr);
+      if (successMatch != null) {
+        try {
+          final jsonMap =
+              jsonDecode(successMatch.group(0)!) as Map<String, dynamic>;
+          final msg = jsonMap['message']?.toString() ??
+              'If an account exists with that email, a password reset link has been sent.';
+          return Right(msg);
+        } catch (_) {}
+      }
+
+      if (response.statusCode == 200) {
+        return const Right(
+          'If an account exists with that email, a password reset link has been sent.',
+        );
+      }
+
+      return Left(ApiException(message: 'Failed to send reset link.'));
+    } catch (e) {
+      return Left(ApiException(message: 'Failed to send reset link.'));
     }
   }
 
