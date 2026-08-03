@@ -36,7 +36,8 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Certification Applications'),
+        title: const Text('Applications'),
+        // backgroundColor: AppColors.primary,
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -151,7 +152,9 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
         : allApps.where((a) {
             final st = a.status.toUpperCase();
             if (filterStatus == 'UNDER_REVIEW') {
-              return st == 'UNDER_REVIEW' || st == 'PENDING' || st == 'SUBMITTED';
+              return st == 'UNDER_REVIEW' ||
+                  st == 'PENDING' ||
+                  st == 'SUBMITTED';
             }
             if (filterStatus == 'COMPLETED') {
               return st == 'COMPLETED' || st == 'APPROVED';
@@ -237,17 +240,20 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
 
   Widget _buildApplicationCard(BuildContext context, Application app) {
     final statusColor = _getStatusColor(app.status);
-    final startupName = app.data?['startupName']?.toString() ??
+    final startupName =
+        app.data?['startupName']?.toString() ??
         app.data?['startup_name']?.toString() ??
         'Startup Application';
     final initial = startupName.trim().isNotEmpty
         ? startupName.trim()[0].toUpperCase()
         : 'S';
 
-    final industry = app.data?['industry']?.toString() ??
+    final industry =
+        app.data?['industry']?.toString() ??
         app.data?['sector']?.toString() ??
         'General';
-    final category = app.type ??
+    final category =
+        app.type ??
         app.data?['typeOfCompany']?.toString() ??
         app.data?['stage']?.toString() ??
         'INITIAL';
@@ -268,9 +274,10 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
           'Sep',
           'Oct',
           'Nov',
-          'Dec'
+          'Dec',
         ];
-        formattedDate = '${monthNames[dt.month - 1]} ${dt.day.toString().padLeft(2, '0')}, ${dt.year}';
+        formattedDate =
+            '${monthNames[dt.month - 1]} ${dt.day.toString().padLeft(2, '0')}, ${dt.year}';
       } catch (_) {
         formattedDate = app.createdAt!;
       }
@@ -302,9 +309,8 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => NewApplicationWizardScreen(
-                    existingApplication: app,
-                  ),
+                  builder: (context) =>
+                      NewApplicationWizardScreen(existingApplication: app),
                 ),
               );
             } else {
@@ -510,8 +516,9 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
                       backgroundColor: isDraft
                           ? AppColors.primary
                           : const Color(0xFFF8FAFC),
-                      foregroundColor:
-                          isDraft ? Colors.white : AppColors.primary,
+                      foregroundColor: isDraft
+                          ? Colors.white
+                          : AppColors.primary,
                       elevation: 0,
                       side: isDraft
                           ? BorderSide.none

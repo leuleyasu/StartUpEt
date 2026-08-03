@@ -1,3 +1,4 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -211,14 +212,94 @@ class _NewApplicationWizardScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not pick file: $e'),
-            backgroundColor: Colors.red,
+        final snackBar = SnackBar(
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          content: AwesomeSnackbarContent(
+            title: 'File Error',
+            message: 'Could not pick file: $e',
+            contentType: ContentType.failure,
           ),
         );
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(snackBar);
       }
     }
+  }
+
+  String _mapStageToBackend(String? stage) {
+    switch (stage) {
+      case 'Idea Stage':
+      case 'Early Stage (MVP)':
+        return 'INITIAL';
+      case 'Growth Stage':
+        return 'POST_INITIAL';
+      case 'Expansion Stage':
+        return 'SCALE_EXIT';
+      default:
+        return 'INITIAL';
+    }
+  }
+
+  Map<String, dynamic> _buildPayload({required String status}) {
+    final Map<String, dynamic> payload = {
+      'status': status,
+      'startupName': _startupNameController.text.trim().isEmpty
+          ? (status == 'DRAFT'
+                ? 'Draft Startup Application'
+                : 'My Ethiopian Startup')
+          : _startupNameController.text.trim(),
+      'industry': _selectedIndustry ?? 'Agriculture & AgriTech',
+      'stage': _mapStageToBackend(_selectedStage),
+    };
+
+    void addIfNotEmpty(String key, String value) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        payload[key] = trimmed;
+      }
+    }
+
+    // Backend fields + legacy client fallbacks
+    addIfNotEmpty('businessRegNumber', _registrationNumberController.text);
+    addIfNotEmpty('registrationNumber', _registrationNumberController.text);
+
+    addIfNotEmpty('tinNumber', _tinController.text);
+    addIfNotEmpty('tin', _tinController.text);
+
+    addIfNotEmpty('numberOfEmployees', _employeesController.text);
+    addIfNotEmpty('employees', _employeesController.text);
+
+    addIfNotEmpty('capital', _capitalController.text);
+
+    if (_foundingDate != null) {
+      payload['foundingDate'] = _foundingDate!.toIso8601String();
+    }
+
+    addIfNotEmpty('website', _websiteController.text);
+
+    addIfNotEmpty('businessEmail', _businessEmailController.text);
+    addIfNotEmpty('email', _businessEmailController.text);
+
+    addIfNotEmpty('phoneNumber', _phoneController.text);
+    addIfNotEmpty('phone', _phoneController.text);
+
+    addIfNotEmpty('founderName', _founderNameController.text);
+
+    addIfNotEmpty('businessDescription', _descriptionController.text);
+    addIfNotEmpty('description', _descriptionController.text);
+
+    if (_articlesDocName != null) payload['articlesDoc'] = _articlesDocName;
+    if (_articlesDocPath != null) payload['articlesDocPath'] = _articlesDocPath;
+    if (_regCertDocName != null) payload['regCertDoc'] = _regCertDocName;
+    if (_regCertDocPath != null) payload['regCertDocPath'] = _regCertDocPath;
+    if (_pitchDeckDocName != null) payload['pitchDeckDoc'] = _pitchDeckDocName;
+    if (_pitchDeckDocPath != null)
+      payload['pitchDeckDocPath'] = _pitchDeckDocPath;
+
+    return payload;
   }
 
   void _saveDraft() {
@@ -226,30 +307,7 @@ class _NewApplicationWizardScreenState
       _isSubmitting = true;
     });
 
-    final draftData = {
-      'status': 'DRAFT',
-      'startupName': _startupNameController.text.isEmpty
-          ? 'Draft Startup Application'
-          : _startupNameController.text,
-      'registrationNumber': _registrationNumberController.text,
-      'tin': _tinController.text,
-      'employees': _employeesController.text,
-      'capital': _capitalController.text,
-      'foundingDate': _foundingDate?.toIso8601String(),
-      'industry': _selectedIndustry ?? 'Agriculture & AgriTech',
-      'stage': _selectedStage ?? 'Early Stage (MVP)',
-      'website': _websiteController.text,
-      'email': _businessEmailController.text,
-      'phone': _phoneController.text,
-      'founderName': _founderNameController.text,
-      'description': _descriptionController.text,
-      if (_articlesDocName != null) 'articlesDoc': _articlesDocName,
-      if (_articlesDocPath != null) 'articlesDocPath': _articlesDocPath,
-      if (_regCertDocName != null) 'regCertDoc': _regCertDocName,
-      if (_regCertDocPath != null) 'regCertDocPath': _regCertDocPath,
-      if (_pitchDeckDocName != null) 'pitchDeckDoc': _pitchDeckDocName,
-      if (_pitchDeckDocPath != null) 'pitchDeckDocPath': _pitchDeckDocPath,
-    };
+    final draftData = _buildPayload(status: 'DRAFT');
 
     if (widget.existingApplication != null) {
       draftData['id'] = widget.existingApplication!.id;
@@ -261,12 +319,19 @@ class _NewApplicationWizardScreenState
 
   void _submitApplication() {
     if (!_declarationConfirmed) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please accept the declaration before submitting.'),
-          backgroundColor: Colors.red,
+      final snackBar = SnackBar(
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        content: AwesomeSnackbarContent(
+          title: 'Declaration Required',
+          message: 'Please accept the declaration before submitting.',
+          contentType: ContentType.warning,
         ),
       );
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(snackBar);
       return;
     }
 
@@ -274,30 +339,7 @@ class _NewApplicationWizardScreenState
       _isSubmitting = true;
     });
 
-    final applicationData = {
-      'status': 'PENDING',
-      'startupName': _startupNameController.text.isEmpty
-          ? 'My Ethiopian Startup'
-          : _startupNameController.text,
-      'registrationNumber': _registrationNumberController.text,
-      'tin': _tinController.text,
-      'employees': _employeesController.text,
-      'capital': _capitalController.text,
-      'foundingDate': _foundingDate?.toIso8601String(),
-      'industry': _selectedIndustry ?? 'Agriculture & AgriTech',
-      'stage': _selectedStage ?? 'Early Stage (MVP)',
-      'website': _websiteController.text,
-      'email': _businessEmailController.text,
-      'phone': _phoneController.text,
-      'founderName': _founderNameController.text,
-      'description': _descriptionController.text,
-      if (_articlesDocName != null) 'articlesDoc': _articlesDocName,
-      if (_articlesDocPath != null) 'articlesDocPath': _articlesDocPath,
-      if (_regCertDocName != null) 'regCertDoc': _regCertDocName,
-      if (_regCertDocPath != null) 'regCertDocPath': _regCertDocPath,
-      if (_pitchDeckDocName != null) 'pitchDeckDoc': _pitchDeckDocName,
-      if (_pitchDeckDocPath != null) 'pitchDeckDocPath': _pitchDeckDocPath,
-    };
+    final applicationData = _buildPayload(status: 'PENDING');
 
     if (widget.existingApplication != null) {
       applicationData['id'] = widget.existingApplication!.id;
@@ -317,37 +359,37 @@ class _NewApplicationWizardScreenState
           setState(() {
             _isSubmitting = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(state.message)),
-                ],
-              ),
-              backgroundColor: Colors.red.shade700,
-              duration: const Duration(seconds: 4),
+          final snackBar = SnackBar(
+            elevation: 0,
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.transparent,
+            content: AwesomeSnackbarContent(
+              title: 'Application Error',
+              message: state.message,
+              contentType: ContentType.failure,
             ),
           );
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(snackBar);
         } else if (state is ApplicationCreated ||
             state is ApplicationListLoaded) {
           setState(() {
             _isSubmitting = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.check_circle_outline, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('Application submitted successfully!'),
-                ],
-              ),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 3),
+          final snackBar = SnackBar(
+            elevation: 0,
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.transparent,
+            content: AwesomeSnackbarContent(
+              title: 'Success',
+              message: 'Application saved successfully!',
+              contentType: ContentType.success,
             ),
           );
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(snackBar);
           Navigator.pop(context);
         }
       },
