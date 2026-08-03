@@ -116,12 +116,45 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
 
                 if (state is StartupLoaded) {
                   final startup = state.data;
+                  if (startup.id.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.verified_user_outlined,
+                            size: 48,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'No Active Certification',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'You haven\'t received a startup certification yet. Submit an application to get certified.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
                   final status = startup.status.toUpperCase();
                   final isCertified = status == 'CERTIFIED';
-                  final sector = startup.sector ?? 'General Technology';
-                  final stage = startup.stage ?? 'Initial Stage';
-                  final expiry =
-                      startup.membershipExpiresAt ?? 'Pending Renewal';
+                  final sector = startup.sector ?? 'N/A';
+                  final stage = startup.stage ?? 'N/A';
+                  final expiry = startup.membershipExpiresAt ?? 'Not Available';
 
                   return Card(
                     elevation: 3,
