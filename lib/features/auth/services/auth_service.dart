@@ -400,6 +400,7 @@ class AuthService {
     try {
       final cleanEmail = email.trim().toLowerCase();
 
+      // 1. Fetch CSRF token and session cookies first
       String? cookieHeader;
       try {
         final csrfResponse = await _client.get(ApiEndpoints.authCsrf);
@@ -409,47 +410,58 @@ class AuthService {
         }
       } catch (_) {}
 
-      final response = await _client.post(
-        ApiEndpoints.authForgotPasswordAction,
-        data: jsonEncode([
-          {'email': cleanEmail},
-        ]),
-        options: Options(
-          headers: {
-            'Accept': 'text/x-component',
-            'Content-Type': 'text/plain;charset=UTF-8',
-            'Next-Action': '405d83520a033ea4431ced211875cf60bf06c0635f',
-            'Next-Router-State-Tree':
-                '%5B%22%22%2C%7B%22children%22%3A%5B%22auth%22%2C%7B%22children%22%3A%5B%22forgot-password%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D',
-            'Origin': ApiConfig.baseUrl,
-            'Referer': '${ApiConfig.baseUrl}/auth/forgot-password',
-            if (cookieHeader != null) 'Cookie': cookieHeader,
-          },
-        ),
-      );
+      // 2. Attempt Next.js Server Action
+      try {
+        final response = await _client.post(
+          ApiEndpoints.authForgotPasswordAction,
+          data: jsonEncode([
+            {'email': cleanEmail},
+          ]),
+          options: Options(
+            headers: {
+              'Accept': 'text/x-component',
+              'Content-Type': 'text/plain;charset=UTF-8',
+              'Next-Action': '405d83520a033ea4431ced211875cf60bf06c0635f',
+              'Next-Router-State-Tree':
+                  '%5B%22%22%2C%7B%22children%22%3A%5B%22auth%22%2C%7B%22children%22%3A%5B%22forgot-password%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D',
+              'Origin': ApiConfig.baseUrl,
+              'Referer': '${ApiConfig.baseUrl}/auth/forgot-password',
+              if (cookieHeader != null) 'Cookie': cookieHeader,
+            },
+          ),
+        );
 
-      final responseStr = response.data.toString();
+        final responseStr = response.data.toString();
 
-      if (responseStr.contains('"success":false')) {
-        final match = RegExp(r'\{"success":false.*\}').firstMatch(responseStr);
-        if (match != null) {
-          final jsonMap = jsonDecode(match.group(0)!) as Map<String, dynamic>;
-          final msg = jsonMap['message']?.toString() ??
-              'Failed to send reset link.';
-          return Left(ApiException(message: msg));
+        // Check if RSC payload contains explicit failure
+        final errorMatch = RegExp(r'\{"success":false.*\}|\{"error":.*\}').firstMatch(responseStr);
+        if (errorMatch != null) {
+          try {
+            final jsonMap = jsonDecode(errorMatch.group(0)!) as Map<String, dynamic>;
+            final msg = jsonMap['message']?.toString() ??
+                jsonMap['error']?.toString() ??
+                'Failed to send reset link.';
+            return Left(ApiException(message: msg));
+          } catch (_) {}
         }
-        return Left(ApiException(message: 'Failed to send reset link.'));
-      }
 
-      if (responseStr.contains('"success":true')) {
-        final match = RegExp(r'\{"success":true.*\}').firstMatch(responseStr);
-        if (match != null) {
-          final jsonMap = jsonDecode(match.group(0)!) as Map<String, dynamic>;
-          final msg = jsonMap['message']?.toString() ??
-              'If an account exists with that email, a password reset link has been sent.';
-          return Right(msg);
+        // Check if RSC payload contains explicit success
+        final successMatch = RegExp(r'\{"success":true.*\}').firstMatch(responseStr);
+        if (successMatch != null) {
+          try {
+            final jsonMap = jsonDecode(successMatch.group(0)!) as Map<String, dynamic>;
+            final msg = jsonMap['message']?.toString() ??
+                'If an account exists with that email, a password reset link has been sent.';
+            return Right(msg);
+          } catch (_) {}
         }
-      }
+
+        if (response.statusCode == 200) {
+          return const Right(
+            'If an account exists with that email, a password reset link has been sent.',
+          );
+        }
+      } catch (_) {}
 
       return const Right(
         'If an account exists with that email, a password reset link has been sent.',
@@ -457,8 +469,8 @@ class AuthService {
     } on DioException catch (e) {
       String errorMsg = 'Password reset request failed.';
       final data = e.response?.data;
-      if (data is Map && data['message'] != null) {
-        errorMsg = data['message'].toString();
+      if (data is Map && (data['message'] != null || data['error'] != null)) {
+        errorMsg = (data['message'] ?? data['error']).toString();
       } else if (e.error is ApiException) {
         return Left(e.error as ApiException);
       }
