@@ -410,23 +410,11 @@ class AuthService {
         }
       } catch (_) {}
 
-      // 2. Try single string parameter payload: ["email@example.com"]
-      final resStringParam = await _postForgotPasswordAction(
+      // Send single string parameter payload: ["email@example.com"]
+      return await _postForgotPasswordAction(
         payload: jsonEncode([cleanEmail]),
         cookieHeader: cookieHeader,
       );
-      if (resStringParam.isRight()) return resStringParam;
-
-      // 3. Fall back to map parameter payload: [{"email": "email@example.com"}]
-      final resMapParam = await _postForgotPasswordAction(
-        payload: jsonEncode([
-          {'email': cleanEmail},
-        ]),
-        cookieHeader: cookieHeader,
-      );
-      if (resMapParam.isRight()) return resMapParam;
-
-      return resStringParam;
     } on DioException catch (e) {
       String errorMsg = 'Password reset request failed.';
       final data = e.response?.data;
