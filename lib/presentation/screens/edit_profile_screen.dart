@@ -1,3 +1,4 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -32,8 +33,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     final u = widget.user;
     final nameParts = (u?.name ?? '').trim().split(' ');
-    final defaultFirstName = u?.firstName ?? (nameParts.isNotEmpty ? nameParts.first : '');
-    final defaultLastName = u?.lastName ?? (nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '');
+    final defaultFirstName =
+        u?.firstName ?? (nameParts.isNotEmpty ? nameParts.first : '');
+    final defaultLastName =
+        u?.lastName ??
+        (nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '');
 
     _firstNameController = TextEditingController(text: defaultFirstName);
     _lastNameController = TextEditingController(text: defaultLastName);
@@ -71,15 +75,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final image = _imageUrlController.text.trim();
 
     context.read<AuthBloc>().add(
-          AuthUpdateProfileRequested(
-            firstName: firstName.isNotEmpty ? firstName : null,
-            lastName: lastName.isNotEmpty ? lastName : null,
-            name: name.isNotEmpty ? name : null,
-            phone: phone.isNotEmpty ? phone : null,
-            address: address.isNotEmpty ? address : null,
-            image: image.isNotEmpty ? image : null,
-          ),
-        );
+      AuthUpdateProfileRequested(
+        firstName: firstName.isNotEmpty ? firstName : null,
+        lastName: lastName.isNotEmpty ? lastName : null,
+        name: name.isNotEmpty ? name : null,
+        phone: phone.isNotEmpty ? phone : null,
+        address: address.isNotEmpty ? address : null,
+        image: image.isNotEmpty ? image : null,
+      ),
+    );
   }
 
   @override
@@ -104,18 +108,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _isSubmitting = false;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Edit Profile'),
-          centerTitle: true,
-        ),
+        backgroundColor: Colors.white,
+        appBar: AppBar(title: const Text('Edit Profile'), centerTitle: true),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Form(
@@ -138,8 +137,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               (_firstNameController.text.isNotEmpty
                                       ? _firstNameController.text[0]
                                       : (user?.name?.isNotEmpty == true
-                                          ? user!.name![0]
-                                          : 'U'))
+                                            ? user!.name![0]
+                                            : 'U'))
                                   .toUpperCase(),
                               style: const TextStyle(
                                 fontSize: 36,
@@ -149,13 +148,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             )
                           : null,
                     ),
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: AppColors.primary,
-                      child: const Icon(
-                        Icons.camera_alt,
-                        size: 16,
-                        color: Colors.white,
+                    GestureDetector(
+                      onTap: () async {
+                        try {
+                          final XTypeGroup typeGroup = const XTypeGroup(
+                            label: 'images',
+                            extensions: ['jpg', 'jpeg', 'png', 'webp'],
+                          );
+                          final XFile? file = await openFile(
+                            acceptedTypeGroups: [typeGroup],
+                          );
+                          if (file != null) {
+                            setState(() {
+                              _imageUrlController.text = file.path;
+                            });
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error selecting image: $e'),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: CircleAvatar(
+                        radius: 16,
+                        backgroundColor: AppColors.primary,
+                        child: const Icon(
+                          Icons.camera_alt,
+                          size: 16,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ],
@@ -163,10 +188,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 8),
                 Text(
                   user?.email ?? 'User Account',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 24),
 
@@ -211,7 +233,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.12),
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

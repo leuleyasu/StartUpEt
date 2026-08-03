@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:startupet/core/app_colors.dart';
 
 import '../../features/certificate/bloc/certificate_bloc.dart';
 import '../../features/certificate/bloc/certificate_event.dart';
@@ -24,6 +25,7 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Startup Certifications'),
         actions: [
@@ -129,16 +131,15 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        gradient: LinearGradient(
-                          colors: isCertified
-                              ? [
-                                  const Color(0xFF0F766E),
-                                  const Color(0xFF0D9488),
-                                ]
-                              : [Colors.orange.shade800, Colors.amber.shade700],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: AppColors.primary,
+                        // gradient: LinearGradient(
+                        //   colors: [
+                        //     const Color(0xFF0F766E),
+                        //     const Color(0xFF0D9488),
+                        //   ],
+                        //   begin: Alignment.topLeft,
+                        //   end: Alignment.bottomRight,
+                        // ),
                       ),
                       padding: const EdgeInsets.all(24),
                       child: Column(
@@ -326,82 +327,6 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                   ),
                 );
               },
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Certificate Benefits & Incentives',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _benefitCard(
-              title: 'Tax Exemption & Duties Relief',
-              description: 'Eligible for 3-5 year corporate tax holiday under the Ethiopian Startup Proclamation.',
-              icon: Icons.account_balance,
-              color: Colors.indigo,
-            ),
-            const SizedBox(height: 10),
-            _benefitCard(
-              title: 'Customs & Equipment Duty Waiver',
-              description: 'Waived import duties on essential tech hardware and R&D machinery.',
-              icon: Icons.local_shipping,
-              color: Colors.blue,
-            ),
-            const SizedBox(height: 10),
-            _benefitCard(
-              title: 'Priority National Innovation Fund',
-              description: 'Direct access to government grant allocations and interest-subsidized venture debt.',
-              icon: Icons.star,
-              color: Colors.amber.shade800,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _benefitCard({
-    required String title,
-    required String description,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: color.withValues(alpha: 0.12),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                  ),
-                ],
-              ),
             ),
           ],
         ),

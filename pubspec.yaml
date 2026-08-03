@@ -42,6 +42,7 @@ dependencies:
   awesome_snackbar_content: ^0.1.8
   logger: ^2.7.0
   flutter_floating_bottom_bar: ^2.0.2
+  file_selector: ^1.0.3
 
 dev_dependencies:
   flutter_test:

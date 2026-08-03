@@ -22,7 +22,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     context.read<ApplicationBloc>().add(const FetchApplications());
   }
 
@@ -47,6 +47,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
           unselectedLabelColor: Colors.grey[600],
           tabs: const [
             Tab(text: 'All'),
+            Tab(text: 'Drafts'),
             Tab(text: 'Under Review'),
             Tab(text: 'Completed'),
             Tab(text: 'Certified'),
@@ -117,6 +118,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
             controller: _tabController,
             children: [
               _buildApplicationsList(apps, null),
+              _buildApplicationsList(apps, 'DRAFT'),
               _buildApplicationsList(apps, 'UNDER_REVIEW'),
               _buildApplicationsList(apps, 'COMPLETED'),
               _buildApplicationsList(apps, 'CERTIFIED'),
@@ -146,7 +148,16 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
   ) {
     final filtered = filterStatus == null
         ? allApps
-        : allApps.where((a) => a.status.toUpperCase() == filterStatus).toList();
+        : allApps.where((a) {
+            final st = a.status.toUpperCase();
+            if (filterStatus == 'UNDER_REVIEW') {
+              return st == 'UNDER_REVIEW' || st == 'PENDING' || st == 'SUBMITTED';
+            }
+            if (filterStatus == 'COMPLETED') {
+              return st == 'COMPLETED' || st == 'APPROVED';
+            }
+            return st == filterStatus;
+          }).toList();
 
     if (filtered.isEmpty) {
       return RefreshIndicator(
@@ -218,63 +229,442 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
         itemCount: filtered.length,
         itemBuilder: (context, index) {
           final app = filtered[index];
-          final statusColor = _getStatusColor(app.status);
+          return _buildApplicationCard(context, app);
+        },
+      ),
+    );
+  }
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+  Widget _buildApplicationCard(BuildContext context, Application app) {
+    final statusColor = _getStatusColor(app.status);
+    final startupName = app.data?['startupName']?.toString() ??
+        app.data?['startup_name']?.toString() ??
+        'Startup Application';
+    final initial = startupName.trim().isNotEmpty
+        ? startupName.trim()[0].toUpperCase()
+        : 'S';
+
+    final industry = app.data?['industry']?.toString() ??
+        app.data?['sector']?.toString() ??
+        'General';
+    final category = app.type ??
+        app.data?['typeOfCompany']?.toString() ??
+        app.data?['stage']?.toString() ??
+        'INITIAL';
+
+    String formattedDate = 'Recently';
+    if (app.createdAt != null && app.createdAt!.isNotEmpty) {
+      try {
+        final dt = DateTime.parse(app.createdAt!);
+        final monthNames = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec'
+        ];
+        formattedDate = '${monthNames[dt.month - 1]} ${dt.day.toString().padLeft(2, '0')}, ${dt.year}';
+      } catch (_) {
+        formattedDate = app.createdAt!;
+      }
+    }
+
+    final bool isDraft = app.status.toUpperCase() == 'DRAFT';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            if (isDraft) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => NewApplicationWizardScreen(
+                    existingApplication: app,
+                  ),
+                ),
+              );
+            } else {
+              _showApplicationDetailBottomSheet(context, app);
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top Row: Identity (Avatar + Title) & Status Badge
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primary.withValues(alpha: 0.8),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          initial,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            startupName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Filed on $formattedDate',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        app.status.toUpperCase(),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11.5,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                const SizedBox(height: 14),
+
+                // Details Row: Focus (Industry) & Category
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'FOCUS',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade500,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.category_outlined,
+                                size: 14,
+                                color: Colors.grey.shade700,
+                              ),
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child: Text(
+                                  industry,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF334155),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CATEGORY',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade500,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.stars_outlined,
+                                size: 14,
+                                color: Colors.grey.shade700,
+                              ),
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child: Text(
+                                  category,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF334155),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+
+                // Bottom Actions Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 38,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      if (isDraft) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => NewApplicationWizardScreen(
+                              existingApplication: app,
+                            ),
+                          ),
+                        );
+                      } else {
+                        _showApplicationDetailBottomSheet(context, app);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDraft
+                          ? AppColors.primary
+                          : const Color(0xFFF8FAFC),
+                      foregroundColor:
+                          isDraft ? Colors.white : AppColors.primary,
+                      elevation: 0,
+                      side: isDraft
+                          ? BorderSide.none
+                          : BorderSide(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                            ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: Icon(
+                      isDraft
+                          ? Icons.edit_note_rounded
+                          : Icons.visibility_outlined,
+                      size: 16,
+                    ),
+                    label: Text(
+                      isDraft ? 'Continue Application' : 'View Details',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: CircleAvatar(
-                backgroundColor: statusColor.withValues(alpha: 0.15),
-                child: Icon(Icons.description, color: statusColor),
-              ),
-              title: Text(
-                app.data?['startupName']?.toString() ?? 'Startup Application',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-                  Text('ID: ${app.id}'),
-                  if (app.createdAt != null)
-                    Text('Submitted: ${app.createdAt}'),
-                ],
-              ),
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  app.status.toUpperCase(),
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showApplicationDetailBottomSheet(
+    BuildContext context,
+    Application app,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        final statusColor = _getStatusColor(app.status);
+        final name =
+            app.data?['startupName']?.toString() ?? 'Startup Application';
+        final industry =
+            app.data?['industry']?.toString() ?? 'General Technology';
+        final stage = app.data?['stage']?.toString() ?? 'Early Stage';
+        final phone = app.data?['phone']?.toString() ?? 'N/A';
+        final email = app.data?['email']?.toString() ?? 'N/A';
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-            ),
-          );
-        },
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      app.status.toUpperCase(),
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '$industry • $stage',
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              ),
+              const Divider(height: 24),
+              _detailRow('Application ID', app.id),
+              _detailRow('Email Contact', email),
+              _detailRow('Phone Number', phone),
+              if (app.createdAt != null)
+                _detailRow('Submitted Date', app.createdAt.toString()),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+        ],
       ),
     );
   }
 
   Color _getStatusColor(String status) {
     switch (status.toUpperCase()) {
+      case 'DRAFT':
+        return Colors.blueGrey;
       case 'CERTIFIED':
+      case 'APPROVED':
         return Colors.green;
       case 'UNDER_REVIEW':
       case 'PENDING':
+      case 'SUBMITTED':
         return Colors.orange;
       case 'REJECTED':
         return Colors.red;

@@ -11,9 +11,16 @@ class ApplicationService {
 
   ApplicationService(this._client);
 
-  Future<Either<ApiException, List<Application>>> getApplications() async {
+  Future<Either<ApiException, List<Application>>> getApplications({
+    int page = 1,
+    int pageSize = 20,
+    String tab = 'all',
+  }) async {
     try {
-      final response = await _client.get(ApiEndpoints.applications);
+      final response = await _client.get(
+        ApiEndpoints.applications,
+        queryParameters: {'page': page, 'pageSize': pageSize, 'tab': tab},
+      );
       final data = response.data;
       final list = data is List ? data : (data['data'] as List? ?? []);
       return Right(
@@ -43,7 +50,13 @@ class ApplicationService {
         ApiEndpoints.applications,
         data: data,
       );
-      return Right(Application.fromJson(response.data as Map<String, dynamic>));
+      final resData = response.data;
+      final map = resData is Map<String, dynamic>
+          ? (resData['data'] is Map<String, dynamic>
+                ? resData['data'] as Map<String, dynamic>
+                : resData)
+          : <String, dynamic>{};
+      return Right(Application.fromJson(map));
     } on DioException catch (e) {
       return Left(_error(e));
     }
@@ -53,11 +66,18 @@ class ApplicationService {
     Map<String, dynamic> data,
   ) async {
     try {
-      final response = await _client.patch(
-        ApiEndpoints.applications,
-        data: data,
-      );
-      return Right(Application.fromJson(response.data as Map<String, dynamic>));
+      final id = data['id'];
+      final endpoint = id != null
+          ? ApiEndpoints.application(id.toString())
+          : ApiEndpoints.applications;
+      final response = await _client.patch(endpoint, data: data);
+      final resData = response.data;
+      final map = resData is Map<String, dynamic>
+          ? (resData['data'] is Map<String, dynamic>
+                ? resData['data'] as Map<String, dynamic>
+                : resData)
+          : <String, dynamic>{};
+      return Right(Application.fromJson(map));
     } on DioException catch (e) {
       return Left(_error(e));
     }

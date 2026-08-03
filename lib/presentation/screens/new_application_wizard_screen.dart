@@ -1,12 +1,17 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:startupet/features/application/bloc/application_state.dart';
 
 import '../../core/app_colors.dart';
 import '../../features/application/bloc/application_bloc.dart';
 import '../../features/application/bloc/application_event.dart';
+import '../../models/application.dart';
 
 class NewApplicationWizardScreen extends StatefulWidget {
-  const NewApplicationWizardScreen({super.key});
+  final Application? existingApplication;
+
+  const NewApplicationWizardScreen({super.key, this.existingApplication});
 
   @override
   State<NewApplicationWizardScreen> createState() =>
@@ -16,6 +21,94 @@ class NewApplicationWizardScreen extends StatefulWidget {
 class _NewApplicationWizardScreenState
     extends State<NewApplicationWizardScreen> {
   int _currentStep = 1;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingApplication != null) {
+      final data = widget.existingApplication!.data ?? {};
+      String getVal(List<String> keys) {
+        for (final k in keys) {
+          if (data[k] != null && data[k].toString().isNotEmpty) {
+            return data[k].toString();
+          }
+        }
+        return '';
+      }
+
+      _startupNameController.text = getVal([
+        'startupName',
+        'startup_name',
+        'name',
+      ]);
+      _registrationNumberController.text = getVal([
+        'registrationNumber',
+        'registration_number',
+        'regNumber',
+      ]);
+      _tinController.text = getVal(['tin', 'tinNumber', 'tin_number']);
+      _employeesController.text = getVal([
+        'employees',
+        'employeeCount',
+        'num_employees',
+      ]);
+      _capitalController.text = getVal(['capital', 'totalCapital']);
+      _websiteController.text = getVal(['website', 'url']);
+      _businessEmailController.text = getVal([
+        'email',
+        'businessEmail',
+        'business_email',
+      ]);
+      _phoneController.text = getVal(['phone', 'phoneNumber', 'phone_number']);
+      _founderNameController.text = getVal([
+        'founderName',
+        'founder_name',
+        'founder',
+      ]);
+      _descriptionController.text = getVal([
+        'description',
+        'productSummary',
+        'summary',
+      ]);
+
+      final indVal = getVal(['industry', 'sector']);
+      if (indVal.isNotEmpty && _industries.contains(indVal)) {
+        _selectedIndustry = indVal;
+      }
+      final stgVal = getVal(['stage', 'lifecycle']);
+      if (stgVal.isNotEmpty && _stages.contains(stgVal)) {
+        _selectedStage = stgVal;
+      }
+
+      final artDoc = getVal([
+        'articlesDoc',
+        'articles_of_incorporation',
+        'articlesDocName',
+      ]);
+      if (artDoc.isNotEmpty) _articlesDocName = artDoc;
+      final artPath = getVal(['articlesDocPath']);
+      if (artPath.isNotEmpty) _articlesDocPath = artPath;
+
+      final regDoc = getVal([
+        'regCertDoc',
+        'registration_certificate',
+        'regCertDocName',
+      ]);
+      if (regDoc.isNotEmpty) _regCertDocName = regDoc;
+      final regPath = getVal(['regCertDocPath']);
+      if (regPath.isNotEmpty) _regCertDocPath = regPath;
+
+      final pitchDoc = getVal([
+        'pitchDeckDoc',
+        'pitch_deck',
+        'pitchDeckDocName',
+      ]);
+      if (pitchDoc.isNotEmpty) _pitchDeckDocName = pitchDoc;
+      final pitchPath = getVal(['pitchDeckDocPath']);
+      if (pitchPath.isNotEmpty) _pitchDeckDocPath = pitchPath;
+    }
+  }
 
   // Step 1: Business Profile Controllers
   final _startupNameController = TextEditingController();
@@ -31,6 +124,7 @@ class _NewApplicationWizardScreenState
   final _altEmailController = TextEditingController();
   final _phoneController = TextEditingController();
   String? _articlesDocName;
+  String? _articlesDocPath;
 
   // Step 2: Founders Controllers
   final _founderNameController = TextEditingController();
@@ -48,7 +142,9 @@ class _NewApplicationWizardScreenState
 
   // Step 5: Documents
   String? _regCertDocName;
+  String? _regCertDocPath;
   String? _pitchDeckDocName;
+  String? _pitchDeckDocPath;
 
   // Step 6: Review & Declaration
   bool _declarationConfirmed = false;
@@ -94,13 +190,73 @@ class _NewApplicationWizardScreenState
     super.dispose();
   }
 
+  Future<void> _pickDocument({
+    required Function(String name, String? path) onPicked,
+    List<String>? allowedExtensions,
+  }) async {
+    try {
+      final XTypeGroup typeGroup = XTypeGroup(
+        label: 'documents',
+        extensions: allowedExtensions ?? const [],
+      );
+      final XFile? file = await openFile(
+        acceptedTypeGroups:
+            allowedExtensions != null && allowedExtensions.isNotEmpty
+            ? [typeGroup]
+            : const [],
+      );
+
+      if (file != null) {
+        onPicked(file.name, file.path);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not pick file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _saveDraft() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Draft saved successfully! You can resume anytime.'),
-        backgroundColor: Colors.teal,
-      ),
-    );
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    final draftData = {
+      'status': 'DRAFT',
+      'startupName': _startupNameController.text.isEmpty
+          ? 'Draft Startup Application'
+          : _startupNameController.text,
+      'registrationNumber': _registrationNumberController.text,
+      'tin': _tinController.text,
+      'employees': _employeesController.text,
+      'capital': _capitalController.text,
+      'foundingDate': _foundingDate?.toIso8601String(),
+      'industry': _selectedIndustry ?? 'Agriculture & AgriTech',
+      'stage': _selectedStage ?? 'Early Stage (MVP)',
+      'website': _websiteController.text,
+      'email': _businessEmailController.text,
+      'phone': _phoneController.text,
+      'founderName': _founderNameController.text,
+      'description': _descriptionController.text,
+      if (_articlesDocName != null) 'articlesDoc': _articlesDocName,
+      if (_articlesDocPath != null) 'articlesDocPath': _articlesDocPath,
+      if (_regCertDocName != null) 'regCertDoc': _regCertDocName,
+      if (_regCertDocPath != null) 'regCertDocPath': _regCertDocPath,
+      if (_pitchDeckDocName != null) 'pitchDeckDoc': _pitchDeckDocName,
+      if (_pitchDeckDocPath != null) 'pitchDeckDocPath': _pitchDeckDocPath,
+    };
+
+    if (widget.existingApplication != null) {
+      draftData['id'] = widget.existingApplication!.id;
+      context.read<ApplicationBloc>().add(UpdateApplication(draftData));
+    } else {
+      context.read<ApplicationBloc>().add(CreateApplication(draftData));
+    }
   }
 
   void _submitApplication() {
@@ -114,7 +270,12 @@ class _NewApplicationWizardScreenState
       return;
     }
 
+    setState(() {
+      _isSubmitting = true;
+    });
+
     final applicationData = {
+      'status': 'PENDING',
       'startupName': _startupNameController.text.isEmpty
           ? 'My Ethiopian Startup'
           : _startupNameController.text,
@@ -130,123 +291,211 @@ class _NewApplicationWizardScreenState
       'phone': _phoneController.text,
       'founderName': _founderNameController.text,
       'description': _descriptionController.text,
+      if (_articlesDocName != null) 'articlesDoc': _articlesDocName,
+      if (_articlesDocPath != null) 'articlesDocPath': _articlesDocPath,
+      if (_regCertDocName != null) 'regCertDoc': _regCertDocName,
+      if (_regCertDocPath != null) 'regCertDocPath': _regCertDocPath,
+      if (_pitchDeckDocName != null) 'pitchDeckDoc': _pitchDeckDocName,
+      if (_pitchDeckDocPath != null) 'pitchDeckDocPath': _pitchDeckDocPath,
     };
 
-    context.read<ApplicationBloc>().add(CreateApplication(applicationData));
-
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Startup certification application submitted successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    if (widget.existingApplication != null) {
+      applicationData['id'] = widget.existingApplication!.id;
+      context.read<ApplicationBloc>().add(UpdateApplication(applicationData));
+    } else {
+      context.read<ApplicationBloc>().add(CreateApplication(applicationData));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'New Application',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return BlocListener<ApplicationBloc, ApplicationState>(
+      listener: (context, state) {
+        if (!_isSubmitting) return;
+
+        if (state is ApplicationError) {
+          setState(() {
+            _isSubmitting = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(state.message)),
+                ],
+              ),
+              backgroundColor: Colors.red.shade700,
+              duration: const Duration(seconds: 4),
             ),
-            Text(
-              'Step $_currentStep of 6',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+          );
+        } else if (state is ApplicationCreated ||
+            state is ApplicationListLoaded) {
+          setState(() {
+            _isSubmitting = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle_outline, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Application submitted successfully!'),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
             ),
-          ],
-        ),
-        actions: [
-          TextButton.icon(
-            onPressed: _saveDraft,
-            icon: const Icon(Icons.save_outlined, size: 18),
-            label: const Text('Save Draft'),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Column(
+          );
+          Navigator.pop(context);
+        }
+      },
+      child: Stack(
         children: [
-          // Step Progress Bar Indicator
-          _buildStepProgressHeader(),
-
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: _buildCurrentStepView(),
-            ),
-          ),
-
-          // Bottom Action Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -4),
+          Scaffold(
+            backgroundColor: Colors.grey.shade50,
+            appBar: AppBar(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'New Application',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Step $_currentStep of 6',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton.icon(
+                  onPressed: _isSubmitting ? null : _saveDraft,
+                  icon: const Icon(Icons.save_outlined, size: 18),
+                  label: const Text('Save Draft'),
                 ),
+                const SizedBox(width: 8),
               ],
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            body: Column(
               children: [
-                if (_currentStep > 1)
-                  OutlinedButton(
-                    onPressed: () {
-                      setState(() {
-                        _currentStep--;
-                      });
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Previous'),
-                  )
-                else
-                  const SizedBox(),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 28,
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                // Step Progress Bar Indicator
+                _buildStepProgressHeader(),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: _buildCurrentStepView(),
                   ),
-                  onPressed: () {
-                    if (_currentStep < 6) {
-                      setState(() {
-                        _currentStep++;
-                      });
-                    } else {
-                      _submitApplication();
-                    }
-                  },
-                  child: Text(
-                    _currentStep == 6 ? 'Submit Application' : 'Save and Continue',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+
+                // Bottom Action Bar
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (_currentStep > 1)
+                        OutlinedButton(
+                          onPressed: _isSubmitting
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _currentStep--;
+                                  });
+                                },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text('Back'),
+                        )
+                      else
+                        const SizedBox(),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 28,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () {
+                                if (_currentStep < 6) {
+                                  setState(() {
+                                    _currentStep++;
+                                  });
+                                } else {
+                                  _submitApplication();
+                                }
+                              },
+                        child: Text(
+                          _currentStep == 6
+                              ? 'Submit Application'
+                              : 'Save and Continue',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
+          if (_isSubmitting)
+            Container(
+              color: Colors.black.withValues(alpha: 0.45),
+              child: Center(
+                child: Card(
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(color: AppColors.primary),
+                        SizedBox(height: 18),
+                        Text(
+                          'Submitting Application...',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -289,8 +538,8 @@ class _NewApplicationWizardScreenState
                         backgroundColor: isActive
                             ? AppColors.primary
                             : isCompleted
-                                ? Colors.teal
-                                : Colors.grey.shade300,
+                            ? Colors.teal
+                            : Colors.grey.shade300,
                         child: isCompleted
                             ? const Icon(
                                 Icons.check,
@@ -313,8 +562,9 @@ class _NewApplicationWizardScreenState
                         stepTitles[index],
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight:
-                              isActive ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isActive
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                           color: isActive
                               ? AppColors.primary
                               : Colors.grey.shade700,
@@ -328,9 +578,7 @@ class _NewApplicationWizardScreenState
                     width: 24,
                     height: 2,
                     margin: const EdgeInsets.symmetric(horizontal: 8),
-                    color: isCompleted
-                        ? Colors.teal
-                        : Colors.grey.shade300,
+                    color: isCompleted ? Colors.teal : Colors.grey.shade300,
                   ),
               ],
             );
@@ -366,7 +614,11 @@ class _NewApplicationWizardScreenState
       children: [
         const Text(
           'Business Profile',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -476,7 +728,9 @@ class _NewApplicationWizardScreenState
                       ? '${_foundingDate!.year}-${_foundingDate!.month.toString().padLeft(2, '0')}-${_foundingDate!.day.toString().padLeft(2, '0')}'
                       : 'ቀን ይምረጡ…',
                   style: TextStyle(
-                    color: _foundingDate != null ? Colors.black : Colors.grey[600],
+                    color: _foundingDate != null
+                        ? Colors.black
+                        : Colors.grey[600],
                   ),
                 ),
                 const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
@@ -541,11 +795,23 @@ class _NewApplicationWizardScreenState
 
         _buildLabel('Articles of Incorporation *'),
         _buildFileUploadTile(
-          fileName: _articlesDocName ?? 'No file chosen',
-          hint: 'Max 20MB (PDF, DOCX)',
+          fileName: _articlesDocName,
+          hint: 'Max 20MB (PDF, DOCX, PNG, JPG)',
           onPick: () {
+            _pickDocument(
+              allowedExtensions: ['pdf', 'docx', 'doc', 'png', 'jpg', 'jpeg'],
+              onPicked: (name, path) {
+                setState(() {
+                  _articlesDocName = name;
+                  _articlesDocPath = path;
+                });
+              },
+            );
+          },
+          onClear: () {
             setState(() {
-              _articlesDocName = 'Articles_of_Incorporation.pdf';
+              _articlesDocName = null;
+              _articlesDocPath = null;
             });
           },
         ),
@@ -560,7 +826,11 @@ class _NewApplicationWizardScreenState
       children: [
         const Text(
           'Founders & Leadership',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -607,7 +877,11 @@ class _NewApplicationWizardScreenState
       children: [
         const Text(
           'Product & Innovation Details',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -620,7 +894,9 @@ class _NewApplicationWizardScreenState
         TextField(
           controller: _descriptionController,
           maxLines: 3,
-          decoration: _inputDecoration('Briefly outline your product or software platform'),
+          decoration: _inputDecoration(
+            'Briefly outline your product or software platform',
+          ),
         ),
         const SizedBox(height: 16),
 
@@ -628,7 +904,9 @@ class _NewApplicationWizardScreenState
         TextField(
           controller: _problemSolutionController,
           maxLines: 4,
-          decoration: _inputDecoration('Describe the local problem in Ethiopia and your innovative solution'),
+          decoration: _inputDecoration(
+            'Describe the local problem in Ethiopia and your innovative solution',
+          ),
         ),
       ],
     );
@@ -641,7 +919,11 @@ class _NewApplicationWizardScreenState
       children: [
         const Text(
           'Financial Overview',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -675,7 +957,11 @@ class _NewApplicationWizardScreenState
       children: [
         const Text(
           'Required Verification Documents',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -686,17 +972,49 @@ class _NewApplicationWizardScreenState
 
         _buildLabel('Business Registration Certificate *'),
         _buildFileUploadTile(
-          fileName: _regCertDocName ?? 'No file chosen',
-          hint: 'Commercial registration certificate',
-          onPick: () => setState(() => _regCertDocName = 'Business_Registration.pdf'),
+          fileName: _regCertDocName,
+          hint: 'Commercial registration certificate (PDF, DOCX, PNG, JPG)',
+          onPick: () {
+            _pickDocument(
+              allowedExtensions: ['pdf', 'docx', 'doc', 'png', 'jpg', 'jpeg'],
+              onPicked: (name, path) {
+                setState(() {
+                  _regCertDocName = name;
+                  _regCertDocPath = path;
+                });
+              },
+            );
+          },
+          onClear: () {
+            setState(() {
+              _regCertDocName = null;
+              _regCertDocPath = null;
+            });
+          },
         ),
         const SizedBox(height: 16),
 
         _buildLabel('Startup Pitch Deck (PDF) *'),
         _buildFileUploadTile(
-          fileName: _pitchDeckDocName ?? 'No file chosen',
-          hint: 'Executive pitch deck slides',
-          onPick: () => setState(() => _pitchDeckDocName = 'Startup_PitchDeck.pdf'),
+          fileName: _pitchDeckDocName,
+          hint: 'Executive pitch deck slides (PDF, PPTX)',
+          onPick: () {
+            _pickDocument(
+              allowedExtensions: ['pdf', 'pptx', 'ppt'],
+              onPicked: (name, path) {
+                setState(() {
+                  _pitchDeckDocName = name;
+                  _pitchDeckDocPath = path;
+                });
+              },
+            );
+          },
+          onClear: () {
+            setState(() {
+              _pitchDeckDocName = null;
+              _pitchDeckDocPath = null;
+            });
+          },
         ),
       ],
     );
@@ -709,7 +1027,11 @@ class _NewApplicationWizardScreenState
       children: [
         const Text(
           'Review & Submission',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -728,12 +1050,42 @@ class _NewApplicationWizardScreenState
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _reviewRow('Startup Name', _startupNameController.text.isEmpty ? 'My Startup' : _startupNameController.text),
+                _reviewRow(
+                  'Startup Name',
+                  _startupNameController.text.isEmpty
+                      ? 'My Startup'
+                      : _startupNameController.text,
+                ),
                 _reviewRow('Industry', _selectedIndustry ?? 'Technology'),
                 _reviewRow('Stage', _selectedStage ?? 'Early Stage'),
-                _reviewRow('Employees', _employeesController.text.isEmpty ? '10' : _employeesController.text),
-                _reviewRow('Email', _businessEmailController.text.isEmpty ? 'business@example.com' : _businessEmailController.text),
-                _reviewRow('Phone', _phoneController.text.isEmpty ? '+251 91 234 5678' : _phoneController.text),
+                _reviewRow(
+                  'Employees',
+                  _employeesController.text.isEmpty
+                      ? '10'
+                      : _employeesController.text,
+                ),
+                _reviewRow(
+                  'Email',
+                  _businessEmailController.text.isEmpty
+                      ? 'business@example.com'
+                      : _businessEmailController.text,
+                ),
+                _reviewRow(
+                  'Phone',
+                  _phoneController.text.isEmpty
+                      ? '+251 91 234 5678'
+                      : _phoneController.text,
+                ),
+                const Divider(height: 20),
+                _reviewRow(
+                  'Articles of Inc.',
+                  _articlesDocName ?? 'Not uploaded',
+                ),
+                _reviewRow(
+                  'Registration Cert.',
+                  _regCertDocName ?? 'Not uploaded',
+                ),
+                _reviewRow('Pitch Deck', _pitchDeckDocName ?? 'Not uploaded'),
               ],
             ),
           ),
@@ -742,7 +1094,8 @@ class _NewApplicationWizardScreenState
 
         CheckboxListTile(
           value: _declarationConfirmed,
-          onChanged: (val) => setState(() => _declarationConfirmed = val ?? false),
+          onChanged: (val) =>
+              setState(() => _declarationConfirmed = val ?? false),
           activeColor: AppColors.primary,
           contentPadding: EdgeInsets.zero,
           title: const Text(
@@ -761,7 +1114,14 @@ class _NewApplicationWizardScreenState
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: value == 'Not uploaded' ? Colors.red.shade400 : null,
+            ),
+          ),
         ],
       ),
     );
@@ -804,27 +1164,47 @@ class _NewApplicationWizardScreenState
   }
 
   Widget _buildFileUploadTile({
-    required String fileName,
+    required String? fileName,
     required String hint,
     required VoidCallback onPick,
+    VoidCallback? onClear,
   }) {
+    final hasFile = fileName != null && fileName.isNotEmpty;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: hasFile
+            ? AppColors.primary.withValues(alpha: 0.04)
+            : Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: hasFile
+              ? AppColors.primary.withValues(alpha: 0.5)
+              : Colors.grey.shade300,
+          width: hasFile ? 1.5 : 1.0,
+        ),
       ),
       child: Row(
         children: [
-          ElevatedButton(
+          ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey.shade200,
-              foregroundColor: Colors.black87,
+              backgroundColor: hasFile
+                  ? AppColors.primary
+                  : Colors.grey.shade200,
+              foregroundColor: hasFile ? Colors.white : Colors.black87,
               elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: onPick,
-            child: const Text('Choose File'),
+            icon: Icon(
+              hasFile ? Icons.file_present_rounded : Icons.upload_file_rounded,
+              size: 18,
+            ),
+            label: Text(hasFile ? 'Change File' : 'Choose File'),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -832,14 +1212,16 @@ class _NewApplicationWizardScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  fileName,
+                  hasFile ? fileName : 'No file chosen',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                  style: TextStyle(
+                    fontWeight: hasFile ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 13,
+                    color: hasFile ? AppColors.primary : Colors.grey.shade600,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   hint,
                   style: TextStyle(fontSize: 11, color: Colors.grey[500]),
@@ -847,6 +1229,16 @@ class _NewApplicationWizardScreenState
               ],
             ),
           ),
+          if (hasFile && onClear != null)
+            IconButton(
+              icon: const Icon(
+                Icons.cancel_outlined,
+                size: 20,
+                color: Colors.redAccent,
+              ),
+              onPressed: onClear,
+              tooltip: 'Remove File',
+            ),
         ],
       ),
     );

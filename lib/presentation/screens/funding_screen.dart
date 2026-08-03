@@ -1,3 +1,4 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 class FundingScreen extends StatefulWidget {
@@ -7,7 +8,8 @@ class FundingScreen extends StatefulWidget {
   State<FundingScreen> createState() => _FundingScreenState();
 }
 
-class _FundingScreenState extends State<FundingScreen> with SingleTickerProviderStateMixin {
+class _FundingScreenState extends State<FundingScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   final List<Map<String, dynamic>> _grants = [
@@ -56,7 +58,7 @@ class _FundingScreenState extends State<FundingScreen> with SingleTickerProvider
 
   @override
   void initState() {
-    super.initState() ;
+    super.initState();
     _tabController = TabController(length: 2, vsync: this);
   }
 
@@ -81,10 +83,7 @@ class _FundingScreenState extends State<FundingScreen> with SingleTickerProvider
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildGrantsTab(),
-          _buildMyApplicationsTab(),
-        ],
+        children: [_buildGrantsTab(), _buildMyApplicationsTab()],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showSubmitPitchDialog(context),
@@ -111,7 +110,10 @@ class _FundingScreenState extends State<FundingScreen> with SingleTickerProvider
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.deepPurple.shade50,
                         borderRadius: BorderRadius.circular(8),
@@ -134,7 +136,8 @@ class _FundingScreenState extends State<FundingScreen> with SingleTickerProvider
                 const SizedBox(height: 8),
                 Text(
                   grant['title'],
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -142,7 +145,10 @@ class _FundingScreenState extends State<FundingScreen> with SingleTickerProvider
                   style: TextStyle(color: Colors.grey[700], fontSize: 12),
                 ),
                 const SizedBox(height: 8),
-                Text(grant['description'], style: TextStyle(color: Colors.grey[800])),
+                Text(
+                  grant['description'],
+                  style: TextStyle(color: Colors.grey[800]),
+                ),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -156,7 +162,8 @@ class _FundingScreenState extends State<FundingScreen> with SingleTickerProvider
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () => _applyForFunding(context, grant['title']),
+                      onPressed: () =>
+                          _applyForFunding(context, grant['title']),
                       child: const Text('Apply Now'),
                     ),
                   ],
@@ -228,65 +235,101 @@ class _FundingScreenState extends State<FundingScreen> with SingleTickerProvider
   void _showSubmitPitchDialog(BuildContext context) {
     final titleController = TextEditingController();
     final summaryController = TextEditingController();
+    String? pickedFileName;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Submit Pitch Deck'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Startup / Pitch Title',
-                  hintText: 'e.g. AgriTech AI Solutions',
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: summaryController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Executive Summary',
-                  hintText: 'Briefly describe your solution and market target',
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Pitch Deck PDF attached.')),
-                  );
-                },
-                icon: const Icon(Icons.upload_file),
-                label: const Text('Attach Pitch Deck (PDF)'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Pitch successfully submitted to investors!'),
-                    backgroundColor: Colors.green,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Submit Pitch Deck'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Startup / Pitch Title',
+                      hintText: 'e.g. AgriTech AI Solutions',
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
                   ),
-                );
-              },
-              child: const Text('Submit'),
-            ),
-          ],
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: summaryController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Executive Summary',
+                      hintText:
+                          'Briefly describe your solution and market target',
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      try {
+                        final XTypeGroup typeGroup = const XTypeGroup(
+                          label: 'pitch_decks',
+                          extensions: ['pdf', 'pptx', 'ppt'],
+                        );
+                        final XFile? file = await openFile(
+                          acceptedTypeGroups: [typeGroup],
+                        );
+                        if (file != null) {
+                          setDialogState(() {
+                            pickedFileName = file.name;
+                          });
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error selecting file: $e')),
+                          );
+                        }
+                      }
+                    },
+                    icon: Icon(
+                      pickedFileName != null
+                          ? Icons.check_circle
+                          : Icons.upload_file,
+                      color: pickedFileName != null ? Colors.green : null,
+                    ),
+                    label: Text(
+                      pickedFileName ?? 'Attach Pitch Deck (PDF)',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          pickedFileName != null
+                              ? 'Pitch Deck "$pickedFileName" submitted to investors!'
+                              : 'Pitch successfully submitted to investors!',
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
+                  child: const Text('Submit'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
