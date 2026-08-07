@@ -11,10 +11,23 @@ class ApplicationService {
 
   ApplicationService(this._client);
 
-  Future<Either<ApiException, List<Application>>> getApplications() async {
+  Future<Either<ApiException, List<Application>>> getApplications({
+    int page = 1,
+    int pageSize = 20,
+    String tab = 'all',
+  }) async {
     try {
-      final response = await _client.get(ApiEndpoints.applications);
+      final response = await _client.get(
+        ApiEndpoints.applications,
+        queryParameters: {'page': page, 'pageSize': pageSize, 'tab': tab},
+      );
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        return Left(_extractError(response));
+      }
       final data = response.data;
+      if (data is Map && data.containsKey('error')) {
+        return Left(ApiException(message: data['error'].toString(), statusCode: response.statusCode));
+      }
       final list = data is List ? data : (data['data'] as List? ?? []);
       return Right(
         list
@@ -29,6 +42,13 @@ class ApplicationService {
   Future<Either<ApiException, Application>> getApplication(String id) async {
     try {
       final response = await _client.get(ApiEndpoints.application(id));
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        return Left(_extractError(response));
+      }
+      final data = response.data;
+      if (data is Map && data.containsKey('error')) {
+        return Left(ApiException(message: data['error'].toString(), statusCode: response.statusCode));
+      }
       return Right(Application.fromJson(response.data as Map<String, dynamic>));
     } on DioException catch (e) {
       return Left(_error(e));
@@ -43,7 +63,19 @@ class ApplicationService {
         ApiEndpoints.applications,
         data: data,
       );
-      return Right(Application.fromJson(response.data as Map<String, dynamic>));
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        return Left(_extractError(response));
+      }
+      final resData = response.data;
+      if (resData is Map && resData.containsKey('error')) {
+        return Left(ApiException(message: resData['error'].toString(), statusCode: response.statusCode));
+      }
+      final map = resData is Map<String, dynamic>
+          ? (resData['data'] is Map<String, dynamic>
+                ? resData['data'] as Map<String, dynamic>
+                : resData)
+          : <String, dynamic>{};
+      return Right(Application.fromJson(map));
     } on DioException catch (e) {
       return Left(_error(e));
     }
@@ -53,17 +85,55 @@ class ApplicationService {
     Map<String, dynamic> data,
   ) async {
     try {
-      final response = await _client.patch(
-        ApiEndpoints.applications,
-        data: data,
-      );
-      return Right(Application.fromJson(response.data as Map<String, dynamic>));
+      final id = data['id'];
+      final endpoint = id != null
+          ? ApiEndpoints.application(id.toString())
+          : ApiEndpoints.applications;
+      final response = await _client.patch(endpoint, data: data);
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        return Left(_extractError(response));
+      }
+      final resData = response.data;
+      if (resData is Map && resData.containsKey('error')) {
+        return Left(ApiException(message: resData['error'].toString(), statusCode: response.statusCode));
+      }
+      final map = resData is Map<String, dynamic>
+          ? (resData['data'] is Map<String, dynamic>
+                ? resData['data'] as Map<String, dynamic>
+                : resData)
+          : <String, dynamic>{};
+      return Right(Application.fromJson(map));
     } on DioException catch (e) {
       return Left(_error(e));
     }
   }
 
-  ApiException _error(DioException e) => e.error is ApiException
-      ? e.error as ApiException
-      : ApiException(message: e.message ?? 'Request failed');
+  ApiException _extractError(Response response) {
+    String message = 'Request failed';
+    if (response.data is Map) {
+      final map = response.data as Map;
+      if (map['error'] != null) {
+        message = map['error'].toString();
+      } else if (map['message'] != null) {
+        message = map['message'].toString();
+      }
+    }
+    return ApiException(message: message, statusCode: response.statusCode);
+  }
+
+  ApiException _error(DioException e) {
+    if (e.error is ApiException) {
+      return e.error as ApiException;
+    }
+    String message = e.message ?? 'Request failed';
+    if (e.response?.data is Map) {
+      final resData = e.response!.data as Map;
+      if (resData['error'] != null) {
+        message = resData['error'].toString();
+      } else if (resData['message'] != null) {
+        message = resData['message'].toString();
+      }
+    }
+    return ApiException(message: message, statusCode: e.response?.statusCode);
+  }
 }

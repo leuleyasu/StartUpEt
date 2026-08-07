@@ -17,15 +17,23 @@ class StartupStatus {
     this.description,
   });
 
-  factory StartupStatus.fromJson(Map<String, dynamic> json) => StartupStatus(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    status: json['status'] as String,
-    membershipExpiresAt: json['membershipExpiresAt'] as String?,
-    sector: json['sector'] as String?,
-    stage: json['stage'] as String?,
-    description: json['description'] as String?,
-  );
+  factory StartupStatus.fromJson(Map<String, dynamic> json) {
+    // Safely unwrap nested response format if present (e.g. { "data": { ... } })
+    final data = (json.containsKey('data') && json['data'] is Map<String, dynamic>)
+        ? json['data'] as Map<String, dynamic>
+        : json;
+
+    return StartupStatus(
+      id: (data['id'] ?? data['_id'] ?? '').toString(),
+      name: (data['name'] ?? data['startupName'] ?? data['title'] ?? 'Startup').toString(),
+      status: (data['status'] ?? 'PENDING').toString(),
+      membershipExpiresAt:
+          data['membershipExpiresAt']?.toString() ?? data['expiresAt']?.toString(),
+      sector: data['sector']?.toString() ?? data['industry']?.toString(),
+      stage: data['stage']?.toString(),
+      description: data['description']?.toString(),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,

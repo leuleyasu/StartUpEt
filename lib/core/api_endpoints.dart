@@ -4,7 +4,26 @@ class ApiEndpoints {
   static const String applications = '/api/applications';
   static String application(String id) => '/api/applications/$id';
 
+  // NextAuth & Standard Auth Endpoints
+  static const String authCallbackCredentials =
+      '/api/auth/callback/credentials';
+  static const String authSignUpAction = '/auth/sign-up';
+  static const String authForgotPasswordAction = '/auth/forgot-password';
+  static String authVerifyEmailAction(String email) =>
+      '/auth/verify-email?email=${Uri.encodeComponent(email)}';
+  static const String authRegister = '/api/auth/register';
   static const String authCallbackFayda = '/api/auth/callback/fayda';
+  static const String authProviders = '/api/auth/providers';
+  static const String authCsrf = '/api/auth/csrf';
+  static const String authSession = '/api/auth/session';
+  static const String authSessions = '/api/auth/sessions';
+  static const String authSignOut = '/api/auth/signout';
+
+  // Mobile Auth Bearer Token Endpoints (Reference §1.3)
+  static const String mobileAuthLogin = '/api/mobile/auth/login';
+  static const String mobileAuthRefresh = '/api/mobile/auth/refresh';
+  static const String mobileAuthLogout = '/api/mobile/auth/logout';
+  static const String mobileDevices = '/api/mobile/devices';
 
   static String certificateDownload(String id) =>
       '/api/certificates/$id/download';
@@ -72,4 +91,5 @@ class ApiEndpoints {
 
   static const String verifyNationalId = '/api/verify-national-id';
   static const String verifyTin = '/api/verify-tin';
+  static const String userProfile = '/api/user/profile';
 }

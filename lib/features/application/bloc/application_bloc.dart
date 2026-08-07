@@ -44,9 +44,16 @@ class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
   ) async {
     emit(const ApplicationLoading());
     final r = await _service.createApplication(event.data);
-    r.fold(
-      (f) => emit(ApplicationError(f.message)),
-      (d) => emit(ApplicationCreated(d)),
+    await r.fold(
+      (f) async => emit(ApplicationError(f.message)),
+      (d) async {
+        emit(ApplicationCreated(d));
+        final listRes = await _service.getApplications();
+        listRes.fold(
+          (_) {},
+          (apps) => emit(ApplicationListLoaded(apps)),
+        );
+      },
     );
   }
 
@@ -56,9 +63,16 @@ class ApplicationBloc extends Bloc<ApplicationEvent, ApplicationState> {
   ) async {
     emit(const ApplicationLoading());
     final r = await _service.updateApplication(event.data);
-    r.fold(
-      (f) => emit(ApplicationError(f.message)),
-      (d) => emit(ApplicationCreated(d)),
+    await r.fold(
+      (f) async => emit(ApplicationError(f.message)),
+      (d) async {
+        emit(ApplicationCreated(d));
+        final listRes = await _service.getApplications();
+        listRes.fold(
+          (_) {},
+          (apps) => emit(ApplicationListLoaded(apps)),
+        );
+      },
     );
   }
 }

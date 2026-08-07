@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/api_client.dart';
@@ -11,9 +12,125 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AuthBloc(this._authService, this._apiClient) : super(const AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
+    on<AuthLoginRequested>(_onLoginRequested);
+    on<AuthRegisterRequested>(_onRegisterRequested);
+    on<AuthVerifyCodeRequested>(_onVerifyCodeRequested);
+    on<AuthResendCodeRequested>(_onResendCodeRequested);
     on<AuthLoginWithFayda>(_onLoginWithFayda);
     on<AuthSetApiKey>(_onSetApiKey);
+    on<AuthForgotPasswordRequested>(_onForgotPasswordRequested);
+    on<AuthFetchSessionsRequested>(_onFetchSessionsRequested);
+    on<AuthTerminateSessionRequested>(_onTerminateSessionRequested);
     on<AuthLogout>(_onLogout);
+    on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
+  }
+
+  Future<void> _onLoginRequested(
+    AuthLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _authService.loginWithCredentials(
+      username: event.email,
+      password: event.password,
+    );
+    await result.fold(
+      (failure) async {
+        debugPrint("Login Error: ${failure.message}");
+        final msgLower = failure.message.toLowerCase();
+        if (msgLower.contains('verify') || msgLower.contains('verified')) {
+          emit(
+            AuthRequireVerification(
+              email: event.email,
+              message: failure.message,
+            ),
+          );
+        } else {
+          emit(AuthError(failure.message));
+        }
+      },
+      (response) async {
+        if (response.token != null && response.token!.isNotEmpty) {
+          await _apiClient.setApiKey(response.token!);
+        }
+        emit(AuthAuthenticated(response.user));
+      },
+    );
+  }
+
+  Future<void> _onRegisterRequested(
+    AuthRegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _authService.register(
+      firstName: event.firstName,
+      lastName: event.lastName,
+      email: event.email,
+      phoneNumber: event.phoneNumber,
+      password: event.password,
+      confirmPassword: event.confirmPassword,
+      role: event.role,
+    );
+    await result.fold(
+      (failure) async {
+        debugPrint("Register Error: ${failure.message}");
+        emit(AuthError(failure.message));
+      },
+      (response) async {
+        if (response.requiresVerification) {
+          emit(
+            AuthRequireVerification(
+              email: event.email,
+              message: response.message ??
+                  'Registration successful! Please check your email for the verification code.',
+            ),
+          );
+        } else {
+          if (response.token != null && response.token!.isNotEmpty) {
+            await _apiClient.setApiKey(response.token!);
+          }
+          emit(AuthAuthenticated(response.user));
+        }
+      },
+    );
+  }
+
+  Future<void> _onVerifyCodeRequested(
+    AuthVerifyCodeRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _authService.verifyCode(
+      email: event.email,
+      code: event.code,
+    );
+    await result.fold(
+      (failure) async {
+        debugPrint("Verify Error: ${failure.message}");
+        emit(AuthError(failure.message));
+      },
+      (response) async {
+        emit(
+          AuthVerifiedSuccessfully(
+            response.message ??
+                'Email verified successfully! You can now log in.',
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _onResendCodeRequested(
+    AuthResendCodeRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(
+      AuthRequireVerification(
+        email: event.email,
+        message: 'A new verification code has been sent to ${event.email}.',
+      ),
+    );
   }
 
   Future<void> _onCheckRequested(
@@ -34,9 +151,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     final result = await _authService.loginWithFayda(event.authCode);
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (response) => emit(AuthAuthenticated(response.user)),
+    await result.fold(
+      (failure) async {
+        debugPrint("Fayda Auth Error: ${failure.message}");
+        emit(AuthError(failure.message));
+      },
+      (response) async {
+        if (response.token != null && response.token!.isNotEmpty) {
+          await _apiClient.setApiKey(response.token!);
+        }
+        emit(AuthAuthenticated(response.user));
+      },
     );
   }
 
@@ -48,8 +173,73 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     add(const AuthCheckRequested());
   }
 
+  Future<void> _onForgotPasswordRequested(
+    AuthForgotPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _authService.forgotPassword(email: event.email);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (message) => emit(AuthForgotPasswordSuccess(message)),
+    );
+  }
+
+  Future<void> _onFetchSessionsRequested(
+    AuthFetchSessionsRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final result = await _authService.getUserSessions();
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (sessions) => emit(AuthSessionsLoaded(sessions)),
+    );
+  }
+
+  Future<void> _onTerminateSessionRequested(
+    AuthTerminateSessionRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final result = await _authService.terminateSession(event.sessionId);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => add(const AuthFetchSessionsRequested()),
+    );
+  }
+
   Future<void> _onLogout(AuthLogout event, Emitter<AuthState> emit) async {
-    await _apiClient.clearApiKey();
+    await _authService.logout();
     emit(const AuthUnauthenticated());
+  }
+
+  Future<void> _onUpdateProfileRequested(
+    AuthUpdateProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final previousState = state;
+    final currentUser =
+        previousState is AuthAuthenticated ? previousState.user : null;
+
+    emit(const AuthLoading());
+    final result = await _authService.updateProfile(
+      firstName: event.firstName,
+      lastName: event.lastName,
+      name: event.name,
+      phone: event.phone,
+      address: event.address,
+      image: event.image,
+    );
+
+    result.fold(
+      (failure) {
+        emit(AuthError(failure.message));
+        if (currentUser != null) {
+          emit(AuthAuthenticated(currentUser));
+        }
+      },
+      (updatedUser) {
+        emit(AuthAuthenticated(updatedUser));
+      },
+    );
   }
 }
