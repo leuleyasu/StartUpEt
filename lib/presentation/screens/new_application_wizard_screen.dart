@@ -296,8 +296,9 @@ class _NewApplicationWizardScreenState
     if (_regCertDocName != null) payload['regCertDoc'] = _regCertDocName;
     if (_regCertDocPath != null) payload['regCertDocPath'] = _regCertDocPath;
     if (_pitchDeckDocName != null) payload['pitchDeckDoc'] = _pitchDeckDocName;
-    if (_pitchDeckDocPath != null)
+    if (_pitchDeckDocPath != null) {
       payload['pitchDeckDocPath'] = _pitchDeckDocPath;
+    }
 
     return payload;
   }

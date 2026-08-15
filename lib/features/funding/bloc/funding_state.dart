@@ -46,6 +46,13 @@ class FundingMyApplicationsLoaded extends FundingState {
   List<Object?> get props => [applications];
 }
 
+class FundingSaved extends FundingState {
+  final bool isSaved;
+  const FundingSaved(this.isSaved);
+  @override
+  List<Object?> get props => [isSaved];
+}
+
 class FundingError extends FundingState {
   final String message;
   const FundingError(this.message);

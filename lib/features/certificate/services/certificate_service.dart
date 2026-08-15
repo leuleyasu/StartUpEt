@@ -1,7 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
-import '../../../models/certificate.dart';
 import '../../../core/api_client.dart';
 import '../../../core/api_endpoints.dart';
 import '../../../core/api_exceptions.dart';
@@ -11,10 +10,14 @@ class CertificateService {
 
   CertificateService(this._client);
 
-  Future<Either<ApiException, List<int>>> downloadCertificate(String id) async {
+  Future<Either<ApiException, List<int>>> downloadCertificate(
+    String id, {
+    bool inline = false,
+  }) async {
     try {
       final response = await _client.get(
         ApiEndpoints.certificateDownload(id),
+        queryParameters: inline ? {'inline': 'true'} : null,
         options: Options(responseType: ResponseType.bytes),
       );
       return Right(List<int>.from(response.data as List));
@@ -28,11 +31,13 @@ class CertificateService {
   }
 
   Future<Either<ApiException, List<int>>> downloadCertificateAlt(
-    String id,
-  ) async {
+    String id, {
+    bool inline = false,
+  }) async {
     try {
       final response = await _client.get(
         ApiEndpoints.certificateDownloadAlt(id),
+        queryParameters: inline ? {'inline': 'true'} : null,
         options: Options(responseType: ResponseType.bytes),
       );
       return Right(List<int>.from(response.data as List));
@@ -45,15 +50,16 @@ class CertificateService {
     }
   }
 
-  Future<Either<ApiException, Certificate>> generatePdf(
+  Future<Either<ApiException, List<int>>> generatePdf(
     Map<String, dynamic> data,
   ) async {
     try {
       final response = await _client.post(
         ApiEndpoints.certificateGeneratePdf,
         data: data,
+        options: Options(responseType: ResponseType.bytes),
       );
-      return Right(Certificate.fromJson(response.data as Map<String, dynamic>));
+      return Right(List<int>.from(response.data as List));
     } on DioException catch (e) {
       return Left(
         e.error is ApiException

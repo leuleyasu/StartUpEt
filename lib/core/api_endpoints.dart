@@ -92,4 +92,14 @@ class ApiEndpoints {
   static const String verifyNationalId = '/api/verify-national-id';
   static const String verifyTin = '/api/verify-tin';
   static const String userProfile = '/api/user/profile';
+
+  // File Upload & Avatar (Reference §5.4)
+  static const String uploadAvatar = '/api/upload/avatar';
+
+  // Reports & Hub Reports (Reference §3.11)
+  static const String reportsSubmit = '/api/reports/submit';
+  static const String hubReports = '/api/hub-reports';
+
+  // Device push tokens (Reference §4.1)
+  static String mobileDevice(String token) => '/api/mobile/devices/$token';
 }

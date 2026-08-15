@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../models/startup_status.dart';
+import '../services/startup_service.dart';
 
 abstract class StartupState extends Equatable {
   const StartupState();
@@ -24,6 +25,15 @@ class StartupLoaded extends StartupState {
 
   @override
   List<Object?> get props => [data];
+}
+
+class StartupRenewed extends StartupState {
+  final StartupRenewalResult result;
+
+  const StartupRenewed(this.result);
+
+  @override
+  List<Object?> get props => [result];
 }
 
 class StartupError extends StartupState {

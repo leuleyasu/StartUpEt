@@ -65,7 +65,7 @@ class FundingBloc extends Bloc<FundingEvent, FundingState> {
     final r = await _service.saveFunding(event.data);
     r.fold(
       (f) => emit(FundingError(f.message)),
-      (d) => emit(FundingDetailLoaded(d)),
+      (isSaved) => emit(FundingSaved(isSaved)),
     );
   }
 }

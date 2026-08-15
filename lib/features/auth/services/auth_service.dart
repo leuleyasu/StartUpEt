@@ -568,6 +568,61 @@ class AuthService {
     }
   }
 
+  Future<Either<ApiException, void>> terminateOtherSessions() async {
+    try {
+      await _client.post(
+        ApiEndpoints.authSessions,
+        data: {
+          'action': 'terminateOthers',
+        },
+      );
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(
+        e.error is ApiException
+            ? e.error as ApiException
+            : ApiException(message: e.message ?? 'Failed to terminate other sessions'),
+      );
+    }
+  }
+
+  Future<Either<ApiException, void>> registerDeviceToken({
+    required String token,
+    String platform = 'android',
+    String? appVersion,
+  }) async {
+    try {
+      await _client.post(
+        ApiEndpoints.mobileDevices,
+        data: {
+          'token': token,
+          'platform': platform,
+          if (appVersion != null) 'appVersion': appVersion,
+        },
+      );
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(
+        e.error is ApiException
+            ? e.error as ApiException
+            : ApiException(message: e.message ?? 'Failed to register device token'),
+      );
+    }
+  }
+
+  Future<Either<ApiException, void>> unregisterDeviceToken(String token) async {
+    try {
+      await _client.delete(ApiEndpoints.mobileDevice(token));
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(
+        e.error is ApiException
+            ? e.error as ApiException
+            : ApiException(message: e.message ?? 'Failed to unregister device token'),
+      );
+    }
+  }
+
   Future<Either<ApiException, void>> logout() async {
     try {
       // 1. Try mobile logout route if present

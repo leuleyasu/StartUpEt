@@ -29,7 +29,7 @@ class StartupBloc extends Bloc<StartupEvent, StartupState> {
     final result = await _service.renew();
     result.fold(
       (failure) => emit(StartupError(failure.message)),
-      (data) => emit(StartupLoaded(data)),
+      (data) => emit(StartupRenewed(data)),
     );
   }
 }

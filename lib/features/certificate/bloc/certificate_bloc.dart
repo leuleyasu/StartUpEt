@@ -45,7 +45,7 @@ class CertificateBloc extends Bloc<CertificateEvent, CertificateState> {
     final result = await _service.generatePdf(event.data);
     result.fold(
       (failure) => emit(CertificateError(failure.message)),
-      (cert) => emit(CertificatePdfGenerated(cert)),
+      (bytes) => emit(CertificatePdfGenerated(bytes)),
     );
   }
 }

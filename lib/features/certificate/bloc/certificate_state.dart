@@ -1,7 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-import '../../../models/certificate.dart';
-
 abstract class CertificateState extends Equatable {
   const CertificateState();
 
@@ -27,12 +25,12 @@ class CertificateDownloaded extends CertificateState {
 }
 
 class CertificatePdfGenerated extends CertificateState {
-  final Certificate certificate;
+  final List<int> bytes;
 
-  const CertificatePdfGenerated(this.certificate);
+  const CertificatePdfGenerated(this.bytes);
 
   @override
-  List<Object?> get props => [certificate];
+  List<Object?> get props => [bytes];
 }
 
 class CertificateError extends CertificateState {

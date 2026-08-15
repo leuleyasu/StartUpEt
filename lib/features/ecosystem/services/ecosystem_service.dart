@@ -251,6 +251,24 @@ class EcosystemService {
     }
   }
 
+  Future<Either<ApiException, Funding>> createFunding(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final safeData = Map<String, dynamic>.from(data);
+      safeData.putIfAbsent('sectors', () => []);
+      safeData.putIfAbsent('eligibility', () => []);
+
+      final response = await _client.post(
+        ApiEndpoints.ecosystemFunding,
+        data: safeData,
+      );
+      return Right(_parseSingle(response.data, Funding.fromJson));
+    } on DioException catch (e) {
+      return Left(_error(e));
+    }
+  }
+
   Future<Either<ApiException, Funding>> getFundingById(String id) async {
     try {
       final response = await _client.get(ApiEndpoints.ecosystemFundingId(id));

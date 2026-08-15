@@ -22,6 +22,7 @@ import 'features/notification/bloc/notification_bloc.dart';
 import 'features/notification/services/notification_service.dart';
 import 'features/pitch/bloc/pitch_bloc.dart';
 import 'features/pitch/services/pitch_service.dart';
+import 'features/report/services/report_service.dart';
 import 'features/startup/bloc/startup_bloc.dart';
 import 'features/startup/services/startup_service.dart';
 import 'features/verification/bloc/verification_bloc.dart';
@@ -43,6 +44,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<EventService>(() => EventService(sl()));
   sl.registerLazySingleton<FileService>(() => FileService(sl()));
   sl.registerLazySingleton<FundingService>(() => FundingService(sl()));
+  sl.registerLazySingleton<ReportService>(() => ReportService(sl()));
   sl.registerLazySingleton<NotificationService>(
     () => NotificationService(sl()),
   );
