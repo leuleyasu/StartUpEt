@@ -22,20 +22,21 @@ class MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.15), width: 1.2),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.06),
+            color: color.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
+          if (Theme.of(context).brightness == Brightness.light)
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
         ],
       ),
       child: Material(
@@ -93,10 +94,10 @@ class MetricCard extends StatelessWidget {
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
-                        color: Color(0xFF0F172A),
+                        color: Theme.of(context).colorScheme.onSurface,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -120,7 +121,9 @@ class MetricCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
-                              color: Colors.grey[600],
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ),

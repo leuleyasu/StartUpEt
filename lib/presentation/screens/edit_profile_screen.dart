@@ -3,10 +3,13 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/api_config.dart';
 import '../../core/app_colors.dart';
 import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/bloc/auth_event.dart';
 import '../../features/auth/bloc/auth_state.dart';
+import '../../features/file/services/file_service.dart';
+import '../../injection_container.dart';
 import '../../models/user.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -27,6 +30,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _imageUrlController;
 
   bool _isSubmitting = false;
+  bool _isUploadingAvatar = false;
 
   @override
   void initState() {
@@ -58,24 +62,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  InputDecoration _inputDecoration({
+  InputDecoration _inputDecoration(
+    BuildContext context, {
     required String hintText,
     required IconData prefixIcon,
   }) {
+    final theme = Theme.of(context);
     return InputDecoration(
       hintText: hintText,
-      prefixIcon: Icon(prefixIcon),
-      filled: true,
-      fillColor: Colors.white,
-      border: const OutlineInputBorder(),
-      enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        borderRadius: BorderRadius.circular(8),
-      ),
+      prefixIcon: Icon(prefixIcon, color: theme.colorScheme.onSurfaceVariant),
     );
   }
 
@@ -167,7 +162,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: AppBar(title: const Text('Edit Profile'), centerTitle: true),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -181,58 +175,122 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   CircleAvatar(
                     radius: 46,
                     backgroundColor: AppColors.primary,
-                    backgroundImage: _imageUrlController.text.isNotEmpty
-                        ? NetworkImage(_imageUrlController.text)
+                    backgroundImage: _imageUrlController.text.isNotEmpty &&
+                            !_isUploadingAvatar
+                        ? (_imageUrlController.text.startsWith('http')
+                            ? NetworkImage(_imageUrlController.text)
+                            : NetworkImage(
+                                '${ApiConfig.baseUrl}${_imageUrlController.text.startsWith('/') ? '' : '/'}${_imageUrlController.text}'))
                         : null,
-                    child: _imageUrlController.text.isEmpty
-                        ? Text(
-                            (_firstNameController.text.isNotEmpty
-                                    ? _firstNameController.text[0]
-                                    : (user?.name?.isNotEmpty == true
-                                          ? user!.name![0]
-                                          : 'U'))
-                                .toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 36,
+                    child: _isUploadingAvatar
+                        ? const SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: CircularProgressIndicator(
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              strokeWidth: 2.5,
                             ),
                           )
-                        : null,
+                        : (_imageUrlController.text.isEmpty
+                            ? Text(
+                                (_firstNameController.text.isNotEmpty
+                                        ? _firstNameController.text[0]
+                                        : (user?.name?.isNotEmpty == true
+                                              ? user!.name![0]
+                                              : 'U'))
+                                    .toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 36,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null),
                   ),
                   GestureDetector(
-                    onTap: () async {
-                      try {
-                        final XTypeGroup typeGroup = const XTypeGroup(
-                          label: 'images',
-                          extensions: ['jpg', 'jpeg', 'png', 'webp'],
-                        );
-                        final XFile? file = await openFile(
-                          acceptedTypeGroups: [typeGroup],
-                        );
-                        if (file != null) {
-                          setState(() {
-                            _imageUrlController.text = file.path;
-                          });
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          final snackBar = SnackBar(
-                            elevation: 0,
-                            behavior: SnackBarBehavior.floating,
-                            backgroundColor: Colors.transparent,
-                            content: AwesomeSnackbarContent(
-                              title: 'Image Error',
-                              message: 'Error selecting image: $e',
-                              contentType: ContentType.failure,
-                            ),
-                          );
-                          ScaffoldMessenger.of(context)
-                            ..hideCurrentSnackBar()
-                            ..showSnackBar(snackBar);
-                        }
-                      }
-                    },
+                    onTap: _isUploadingAvatar
+                        ? null
+                        : () async {
+                            try {
+                              final XTypeGroup typeGroup = const XTypeGroup(
+                                label: 'images',
+                                extensions: ['jpg', 'jpeg', 'png', 'webp'],
+                              );
+                              final XFile? file = await openFile(
+                                acceptedTypeGroups: [typeGroup],
+                              );
+                              if (file != null) {
+                                setState(() {
+                                  _isUploadingAvatar = true;
+                                });
+                                final fileService = sl<FileService>();
+                                final uploadResult =
+                                    await fileService.uploadAvatar(file.path);
+
+                                if (!mounted) return;
+
+                                uploadResult.fold(
+                                  (failure) {
+                                    setState(() {
+                                      _isUploadingAvatar = false;
+                                    });
+                                    final snackBar = SnackBar(
+                                      elevation: 0,
+                                      behavior: SnackBarBehavior.floating,
+                                      backgroundColor: Colors.transparent,
+                                      content: AwesomeSnackbarContent(
+                                        title: 'Upload Failed',
+                                        message: failure.message,
+                                        contentType: ContentType.failure,
+                                      ),
+                                    );
+                                    ScaffoldMessenger.of(context)
+                                      ..hideCurrentSnackBar()
+                                      ..showSnackBar(snackBar);
+                                  },
+                                  (avatarUrl) {
+                                    setState(() {
+                                      _imageUrlController.text = avatarUrl;
+                                      _isUploadingAvatar = false;
+                                    });
+                                    final snackBar = SnackBar(
+                                      elevation: 0,
+                                      behavior: SnackBarBehavior.floating,
+                                      backgroundColor: Colors.transparent,
+                                      content: AwesomeSnackbarContent(
+                                        title: 'Avatar Uploaded',
+                                        message:
+                                            'Profile picture uploaded successfully. Tap Save to apply.',
+                                        contentType: ContentType.success,
+                                      ),
+                                    );
+                                    ScaffoldMessenger.of(context)
+                                      ..hideCurrentSnackBar()
+                                      ..showSnackBar(snackBar);
+                                  },
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                setState(() {
+                                  _isUploadingAvatar = false;
+                                });
+                                final snackBar = SnackBar(
+                                  elevation: 0,
+                                  behavior: SnackBarBehavior.floating,
+                                  backgroundColor: Colors.transparent,
+                                  content: AwesomeSnackbarContent(
+                                    title: 'Image Error',
+                                    message: 'Error selecting image: $e',
+                                    contentType: ContentType.failure,
+                                  ),
+                                );
+                                ScaffoldMessenger.of(context)
+                                  ..hideCurrentSnackBar()
+                                  ..showSnackBar(snackBar);
+                              }
+                            }
+                          },
                     child: CircleAvatar(
                       radius: 16,
                       backgroundColor: AppColors.primary,
@@ -248,7 +306,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 8),
               Text(
                 user?.email ?? 'User Account',
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -259,9 +320,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -269,20 +332,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Account Email',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.grey,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           user?.email ?? 'Not available',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ],
@@ -293,8 +357,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Text(
                         user?.role ?? 'USER',
@@ -317,6 +384,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     child: TextField(
                       controller: _firstNameController,
                       decoration: _inputDecoration(
+                        context,
                         hintText: 'First Name',
                         prefixIcon: Icons.person_outline,
                       ),
@@ -328,6 +396,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     child: TextField(
                       controller: _lastNameController,
                       decoration: _inputDecoration(
+                        context,
                         hintText: 'Last Name',
                         prefixIcon: Icons.person_outline,
                       ),
@@ -340,6 +409,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               TextField(
                 controller: _nameController,
                 decoration: _inputDecoration(
+                  context,
                   hintText: 'Full Display Name (e.g. Abebe Bikila)',
                   prefixIcon: Icons.badge_outlined,
                 ),
@@ -350,6 +420,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: _inputDecoration(
+                  context,
                   hintText: 'Phone Number (e.g. +251 91 123 4567)',
                   prefixIcon: Icons.phone_outlined,
                 ),
@@ -359,6 +430,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               TextField(
                 controller: _addressController,
                 decoration: _inputDecoration(
+                  context,
                   hintText: 'Address / Location (e.g. Addis Ababa)',
                   prefixIcon: Icons.location_on_outlined,
                 ),
@@ -368,6 +440,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               TextField(
                 controller: _imageUrlController,
                 decoration: _inputDecoration(
+                  context,
                   hintText: 'Profile Picture URL',
                   prefixIcon: Icons.image_outlined,
                 ),
@@ -410,9 +483,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 12),
               TextButton(
                 onPressed: _isSubmitting ? null : () => Navigator.pop(context),
-                child: const Text(
+                child: Text(
                   'Cancel',
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],

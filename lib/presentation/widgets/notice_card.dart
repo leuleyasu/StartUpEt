@@ -20,15 +20,19 @@ class NoticeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200, width: 1.2),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+          width: 1.2,
+        ),
         boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
+          if (Theme.of(context).brightness == Brightness.light)
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
         ],
       ),
       child: ClipRRect(
@@ -67,10 +71,12 @@ class NoticeCard extends StatelessWidget {
                                 Expanded(
                                   child: Text(
                                     title,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13.5,
-                                      color: Color(0xFF0F172A),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                       letterSpacing: -0.2,
                                     ),
                                   ),
@@ -82,7 +88,9 @@ class NoticeCard extends StatelessWidget {
                               description,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[700],
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                                 height: 1.35,
                               ),
                             ),

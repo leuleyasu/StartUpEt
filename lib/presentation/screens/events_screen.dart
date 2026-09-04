@@ -191,7 +191,9 @@ class _EventsScreenState extends State<EventsScreen>
                       const SizedBox(width: 6),
                       Text(
                         event.date!,
-                        style: TextStyle(color: Colors.grey[800]),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
                     ],
                   ),
@@ -207,7 +209,9 @@ class _EventsScreenState extends State<EventsScreen>
                       const SizedBox(width: 6),
                       Text(
                         event.location!,
-                        style: TextStyle(color: Colors.grey[800]),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
                     ],
                   ),
@@ -215,7 +219,10 @@ class _EventsScreenState extends State<EventsScreen>
                   const SizedBox(height: 8),
                   Text(
                     event.description!,
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
                 const SizedBox(height: 16),

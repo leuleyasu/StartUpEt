@@ -227,6 +227,28 @@ class _VerificationScreenState extends State<VerificationScreen>
                             ),
                           ],
                         ),
+                        if (state.result.data != null) ...[
+                          Builder(
+                            builder: (context) {
+                              final d = state.result.data!;
+                              final name = d['fullName'] ?? d['name'];
+                              final fcn = d['fcn'] ?? d['nationalIdNumber'] ?? _fcnController.text.trim();
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (name != null) ...[
+                                    const SizedBox(height: 8),
+                                    Text('Full Name: $name', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                                  ],
+                                  if (fcn.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Text('FCN: $fcn', style: TextStyle(color: Colors.grey[800], fontSize: 13)),
+                                  ],
+                                ],
+                              );
+                            },
+                          ),
+                        ],
                         if (state.result.message != null) ...[
                           const SizedBox(height: 8),
                           Text(state.result.message!),
@@ -342,6 +364,104 @@ class _VerificationScreenState extends State<VerificationScreen>
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 24),
+          BlocBuilder<VerificationBloc, VerificationState>(
+            builder: (context, state) {
+              if (state is VerificationLoading) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+              if (state is VerificationError) {
+                return Card(
+                  color: Colors.red.shade50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error, color: Colors.red),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            state.message,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              if (state is VerificationResultLoaded) {
+                final isVerified = state.result.verified;
+                final data = state.result.data;
+                final businessName = data?['businessName'] ?? data?['name'];
+                final regNumber = data?['registrationNumber'] ?? data?['regNumber'];
+                final tinNumber = data?['tinNumber'] ?? data?['tin'] ?? _tinController.text.trim();
+
+                return Card(
+                  color: isVerified ? Colors.blue.shade50 : Colors.orange.shade50,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              isVerified ? Icons.check_circle : Icons.warning,
+                              color: isVerified ? Colors.blue.shade800 : Colors.orange,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                isVerified
+                                    ? 'Tax Registration Verified'
+                                    : 'Verification Pending / Not Found',
+                                style: TextStyle(
+                                  color: isVerified
+                                      ? Colors.blue.shade900
+                                      : Colors.orange.shade900,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (businessName != null) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            'Business: $businessName',
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                          ),
+                        ],
+                        if (tinNumber.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text('TIN: $tinNumber', style: TextStyle(color: Colors.grey[800], fontSize: 13)),
+                        ],
+                        if (regNumber != null) ...[
+                          const SizedBox(height: 4),
+                          Text('Registration No: $regNumber', style: TextStyle(color: Colors.grey[800], fontSize: 13)),
+                        ],
+                        if (state.result.message != null) ...[
+                          const SizedBox(height: 8),
+                          Text(state.result.message!),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox();
+            },
           ),
         ],
       ),

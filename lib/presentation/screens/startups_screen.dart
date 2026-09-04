@@ -7,6 +7,7 @@ import '../../core/app_colors.dart';
 import '../../features/startup/bloc/startup_bloc.dart';
 import '../../features/startup/bloc/startup_event.dart';
 import '../../features/startup/bloc/startup_state.dart';
+import 'certifications_screen.dart';
 
 class StartupsScreen extends StatefulWidget {
   const StartupsScreen({super.key});
@@ -47,6 +48,20 @@ class _StartupsScreenState extends State<StartupsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ethiopian Startups & Status'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.workspace_premium_outlined),
+            tooltip: 'View Official Certificate',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CertificationsScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -56,6 +71,13 @@ class _StartupsScreenState extends State<StartupsScreen> {
           listener: (context, state) {
             if (state is StartupError) {
               _showAwesomeSnackbar('Notice', state.message, ContentType.failure);
+            } else if (state is StartupRenewed) {
+              _showAwesomeSnackbar(
+                'Renewal Initiated',
+                state.result.message ??
+                    'Draft renewal application successfully initiated.',
+                ContentType.success,
+              );
             }
           },
           builder: (context, state) {
@@ -151,21 +173,52 @@ class _StartupsScreenState extends State<StartupsScreen> {
                             ),
                           ],
                           const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.primary,
+                                    side: const BorderSide(color: AppColors.primary),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const CertificationsScreen(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.workspace_premium, size: 18),
+                                  label: const Text('View Certificate'),
+                                ),
                               ),
-                              onPressed: () {
-                                context
-                                    .read<StartupBloc>()
-                                    .add(const RenewStartup());
-                              },
-                              icon: const Icon(Icons.autorenew),
-                              label: const Text('Renew Registration'),
-                            ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    context
+                                        .read<StartupBloc>()
+                                        .add(const RenewStartup());
+                                  },
+                                  icon: const Icon(Icons.autorenew, size: 18),
+                                  label: const Text('Renew Label'),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

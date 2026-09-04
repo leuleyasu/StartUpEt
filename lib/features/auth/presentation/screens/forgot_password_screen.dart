@@ -1,9 +1,8 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
-import '../../../../core/app_colors.dart';
 import '../../bloc/auth_bloc.dart';
 import '../../bloc/auth_event.dart';
 import '../../bloc/auth_state.dart';
@@ -35,9 +34,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text('Forgot Password')),
+      appBar: AppBar(
+        title: const Text('Forgot Password'),
+      ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
@@ -74,7 +77,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         builder: (context, state) {
           return Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
                 child: Form(
@@ -82,35 +85,37 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset('assets/logo.png', height: 50),
+                      Image.asset(
+                        isDark
+                            ? 'assets/logo_white.png'
+                            : 'assets/logo.png',
+                        height: 52,
+                      ),
                       const SizedBox(height: 20),
                       Text(
                         'Reset Password',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Enter your registered email address and we will send you instructions to reset your password.',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium
-                            ?.copyWith(color: Colors.grey[600]),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 32),
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                        decoration: const InputDecoration(
                           labelText: 'Email Address',
                           hintText: 'name@example.com',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.email_outlined),
-                          filled: true,
-                          fillColor: Colors.white,
+                          prefixIcon: Icon(Icons.email_outlined),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -125,21 +130,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
-                        height: 48,
+                        height: 50,
                         child: ElevatedButton(
                           onPressed: state is AuthLoading
                               ? null
                               : _submitForgotPassword,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
+                            elevation: 0,
                           ),
                           child: state is AuthLoading
-                              ? const SpinKitThreeBounce(
-                                  color: Colors.white,
+                              ? SpinKitThreeBounce(
+                                  color: theme.colorScheme.onPrimary,
                                   size: 20,
                                 )
                               : const Text(
@@ -150,6 +156,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   ),
                                 ),
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.colorScheme.primary,
+                        ),
+                        child: const Text('Back to Sign In'),
                       ),
                     ],
                   ),

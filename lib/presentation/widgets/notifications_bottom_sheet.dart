@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../core/app_colors.dart';
 import '../../features/notification/bloc/notification_bloc.dart';
 import '../../features/notification/bloc/notification_event.dart';
 import '../../features/notification/bloc/notification_state.dart';
@@ -32,10 +31,15 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
@@ -47,7 +51,7 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: theme.colorScheme.outline.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -57,12 +61,16 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
-                children: const [
-                  Icon(Icons.notifications_active, color: AppColors.primary),
-                  SizedBox(width: 8),
+                children: [
+                  Icon(Icons.notifications_active, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
                   Text(
-                    'Notifications',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    'Notifications & Alerts',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
                 ],
               ),
@@ -89,14 +97,17 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.08),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.outline.withValues(alpha: 0.25),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.notifications,
-                              color: AppColors.primary,
+                              color: theme.colorScheme.primary,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -105,9 +116,10 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
                                 children: [
                                   Text(
                                     info.type ?? 'System Notification',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
+                                      color: theme.colorScheme.onSurface,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -115,7 +127,7 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
                                     info.message ?? 'No additional details',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey[700],
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -140,21 +152,25 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
                       Icon(
                         Icons.notifications_none_outlined,
                         size: 48,
-                        color: Colors.grey[400],
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                       ),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         'No New Notifications',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'You are all caught up with your startup applications and certs.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),

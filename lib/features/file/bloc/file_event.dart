@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../models/file_info.dart';
+
 abstract class FileEvent extends Equatable {
   const FileEvent();
 
@@ -27,11 +29,36 @@ class DownloadFile extends FileEvent {
 
 class UploadFile extends FileEvent {
   final String filePath;
+  final FileCategory category;
+  final String? categoryString;
+  final bool isPublic;
+  final String? entityType;
+  final String? entityId;
+  final String? directory;
+  final Map<String, dynamic>? metadata;
 
-  const UploadFile(this.filePath);
+  const UploadFile(
+    this.filePath, {
+    this.category = FileCategory.other,
+    this.categoryString,
+    this.isPublic = false,
+    this.entityType,
+    this.entityId,
+    this.directory,
+    this.metadata,
+  });
 
   @override
-  List<Object?> get props => [filePath];
+  List<Object?> get props => [
+        filePath,
+        category,
+        categoryString,
+        isPublic,
+        entityType,
+        entityId,
+        directory,
+        metadata,
+      ];
 }
 
 class DeleteFile extends FileEvent {

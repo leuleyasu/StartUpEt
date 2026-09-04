@@ -2,6 +2,8 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'core/api_client.dart';
+import 'core/theme/cubit/theme_cubit.dart';
+import 'core/theme/theme_service.dart';
 import 'features/application/bloc/application_bloc.dart';
 import 'features/application/services/application_service.dart';
 import 'features/auth/bloc/auth_bloc.dart';
@@ -22,6 +24,7 @@ import 'features/notification/bloc/notification_bloc.dart';
 import 'features/notification/services/notification_service.dart';
 import 'features/pitch/bloc/pitch_bloc.dart';
 import 'features/pitch/services/pitch_service.dart';
+import 'features/report/bloc/report_bloc.dart';
 import 'features/report/services/report_service.dart';
 import 'features/startup/bloc/startup_bloc.dart';
 import 'features/startup/services/startup_service.dart';
@@ -54,7 +57,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<ApplicationService>(() => ApplicationService(sl()));
   sl.registerLazySingleton<PitchService>(() => PitchService(sl()));
   sl.registerLazySingleton<CronService>(() => CronService(sl()));
+  sl.registerLazySingleton<ThemeService>(() => ThemeServiceImpl(sl()));
 
+  sl.registerFactory<ThemeCubit>(() => ThemeCubit(sl()));
   sl.registerFactory<AuthBloc>(() => AuthBloc(sl(), sl()));
   sl.registerFactory<StartupBloc>(() => StartupBloc(sl()));
   sl.registerFactory<CertificateBloc>(() => CertificateBloc(sl()));
@@ -67,4 +72,5 @@ Future<void> initDependencies() async {
   sl.registerFactory<ApplicationBloc>(() => ApplicationBloc(sl()));
   sl.registerFactory<PitchBloc>(() => PitchBloc(sl()));
   sl.registerFactory<CronBloc>(() => CronBloc(sl()));
+  sl.registerFactory<ReportBloc>(() => ReportBloc(sl()));
 }

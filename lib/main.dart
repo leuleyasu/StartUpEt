@@ -4,6 +4,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import 'core/app_colors.dart';
+import 'core/theme/app_theme.dart';
+import 'core/theme/cubit/theme_cubit.dart';
+import 'core/theme/cubit/theme_state.dart';
 import 'features/application/bloc/application_bloc.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/bloc/auth_event.dart';
@@ -17,7 +20,9 @@ import 'features/event/bloc/event_bloc.dart';
 import 'features/file/bloc/file_bloc.dart';
 import 'features/funding/bloc/funding_bloc.dart';
 import 'features/notification/bloc/notification_bloc.dart';
+import 'features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'features/pitch/bloc/pitch_bloc.dart';
+import 'features/report/bloc/report_bloc.dart';
 import 'features/startup/bloc/startup_bloc.dart';
 import 'features/verification/bloc/verification_bloc.dart';
 import 'injection_container.dart' as di;
@@ -29,15 +34,26 @@ void main() async {
   final storage = const FlutterSecureStorage();
   final apiKey = await storage.read(key: 'api_key');
   final hasToken = apiKey != null && apiKey.isNotEmpty;
+  final hasSeenOnboarding =
+      (await storage.read(key: OnboardingScreen.hasSeenOnboardingKey)) ==
+          'true';
 
-  runApp(StartupetApp(hasStoredToken: hasToken));
+  runApp(StartupetApp(
+    hasStoredToken: hasToken,
+    hasSeenOnboarding: hasSeenOnboarding,
+  ));
 }
 
 class StartupetApp extends StatelessWidget {
   final bool hasStoredToken;
+  final bool hasSeenOnboarding;
 
-  const StartupetApp({super.key, bool? isAuthenticated, bool? hasStoredToken})
-    : hasStoredToken = hasStoredToken ?? isAuthenticated ?? false;
+  const StartupetApp({
+    super.key,
+    bool? isAuthenticated,
+    bool? hasStoredToken,
+    this.hasSeenOnboarding = false,
+  }) : hasStoredToken = hasStoredToken ?? isAuthenticated ?? false;
 
   @override
   Widget build(BuildContext context) {
@@ -96,28 +112,28 @@ class StartupetApp extends StatelessWidget {
           lazy: true,
           create: (context) => di.sl<CronBloc>(),
         ),
-      ],
-      child: MaterialApp(
-        title: 'StartupEt',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: AppColors.primary,
-            primary: AppColors.primary,
-          ),
-          primaryColor: AppColors.primary,
-          scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-          inputDecorationTheme: const InputDecorationTheme(
-            filled: true,
-            fillColor: Colors.white,
-          ),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.white,
-            surfaceTintColor: Colors.white,
-          ),
-          useMaterial3: true,
+        BlocProvider<ReportBloc>(
+          lazy: true,
+          create: (context) => di.sl<ReportBloc>(),
         ),
-        home: AuthGate(hasStoredToken: hasStoredToken),
+        BlocProvider<ThemeCubit>(
+          create: (context) => di.sl<ThemeCubit>()..loadTheme(),
+        ),
+      ],
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        builder: (context, themeState) {
+          return MaterialApp(
+            title: 'StartupEt',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeState.themeMode,
+            home: AuthGate(
+              hasStoredToken: hasStoredToken,
+              hasSeenOnboarding: hasSeenOnboarding,
+            ),
+          );
+        },
       ),
     );
   }
@@ -125,8 +141,13 @@ class StartupetApp extends StatelessWidget {
 
 class AuthGate extends StatefulWidget {
   final bool hasStoredToken;
+  final bool hasSeenOnboarding;
 
-  const AuthGate({super.key, this.hasStoredToken = false});
+  const AuthGate({
+    super.key,
+    this.hasStoredToken = false,
+    this.hasSeenOnboarding = false,
+  });
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -169,6 +190,9 @@ class _AuthGateState extends State<AuthGate> {
               child: SpinKitThreeBounce(color: AppColors.primary, size: 30),
             ),
           );
+        }
+        if (!widget.hasSeenOnboarding) {
+          return const OnboardingScreen();
         }
         return const LoginScreen();
       },

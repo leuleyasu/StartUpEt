@@ -4,7 +4,8 @@ import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 
 import '../../../../core/app_colors.dart';
 import '../../../../presentation/screens/applications_screen.dart';
-import '../../../../presentation/screens/certifications_screen.dart';
+import '../../../../presentation/screens/events_screen.dart';
+import '../../../../presentation/screens/funding_screen.dart';
 import '../../../../presentation/screens/settings_screen.dart';
 import '../../../../presentation/widgets/startup_dashboard_view.dart';
 import '../../../application/bloc/application_bloc.dart';
@@ -30,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     _currentIndex = 0;
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {
@@ -64,12 +65,12 @@ class _HomeScreenState extends State<HomeScreen>
       height: 52,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.25)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -82,8 +83,10 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(height: 2),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9.5,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 color: isSelected ? Colors.white : Colors.grey[400],
               ),
@@ -112,7 +115,8 @@ class _HomeScreenState extends State<HomeScreen>
             },
           ),
           const ApplicationsScreen(),
-          const CertificationsScreen(),
+          const FundingScreen(),
+          const EventsScreen(),
           const SettingsScreen(),
         ];
 
@@ -120,16 +124,27 @@ class _HomeScreenState extends State<HomeScreen>
           body: BottomBar(
             showIcon: false,
             layout: BottomBarLayout(
-              width: MediaQuery.of(context).size.width * 0.92,
+              width: MediaQuery.of(context).size.width * 0.94,
               borderRadius: BorderRadius.circular(30),
               offset: 16,
               alignment: Alignment.bottomCenter,
             ),
             theme: BottomBarThemeData(
               barDecoration: BoxDecoration(
-                color: AppColors.primary,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF1E293B)
+                    : AppColors.primary,
                 borderRadius: BorderRadius.circular(30),
-                boxShadow: const [],
+                border: Theme.of(context).brightness == Brightness.dark
+                    ? Border.all(color: const Color(0xFF334155), width: 1.2)
+                    : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
             ),
             body: TabBarView(
@@ -138,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen>
               children: pages,
             ),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               child: TabBar(
                 controller: _tabController,
                 indicator: const BoxDecoration(),
@@ -161,12 +176,18 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   _buildTabItem(
                     2,
-                    Icons.workspace_premium_outlined,
-                    Icons.workspace_premium,
-                    'Certifications',
+                    Icons.account_balance_wallet_outlined,
+                    Icons.account_balance_wallet,
+                    'Funding',
                   ),
                   _buildTabItem(
                     3,
+                    Icons.event_outlined,
+                    Icons.event,
+                    'Events',
+                  ),
+                  _buildTabItem(
+                    4,
                     Icons.settings_outlined,
                     Icons.settings,
                     'Settings',

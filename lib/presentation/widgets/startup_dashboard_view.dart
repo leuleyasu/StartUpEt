@@ -5,7 +5,13 @@ import '../../core/app_colors.dart';
 import '../../features/application/bloc/application_bloc.dart';
 import '../../features/application/bloc/application_state.dart';
 import '../../models/user.dart';
+import '../screens/document_vault_screen.dart';
+import '../screens/reports_screen.dart';
+import '../screens/startups_screen.dart';
+import '../screens/verification_screen.dart';
+import 'certification_preview_card.dart';
 import 'metric_card.dart';
+import 'notice_card.dart';
 import 'notifications_bottom_sheet.dart';
 
 class StartupDashboardView extends StatelessWidget {
@@ -30,6 +36,79 @@ class StartupDashboardView extends StatelessWidget {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
     return name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase();
+  }
+
+  Widget _buildServiceCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+            ),
+            boxShadow: [
+              if (isLight)
+                BoxShadow(
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -266,12 +345,12 @@ class StartupDashboardView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
+                    Text(
                       'Overview & Activity',
                       style: TextStyle(
                         fontSize: 16.5,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
+                        color: Theme.of(context).colorScheme.onSurface,
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -296,18 +375,24 @@ class StartupDashboardView extends StatelessWidget {
                             vertical: 32,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: Colors.grey.shade200,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withValues(alpha: 0.3),
                               width: 1.2,
                             ),
                             boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
+                              if (Theme.of(context).brightness ==
+                                  Brightness.light)
+                                BoxShadow(
+                                  color: const Color(0xFF0F172A)
+                                      .withValues(alpha: 0.04),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
                             ],
                           ),
                           child: Column(
@@ -315,7 +400,8 @@ class StartupDashboardView extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.08),
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.08),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -325,12 +411,13 @@ class StartupDashboardView extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 14),
-                              const Text(
+                              Text(
                                 'No Applications Found',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0F172A),
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 6),
@@ -339,7 +426,9 @@ class StartupDashboardView extends StatelessWidget {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.grey[600],
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                 ),
                               ),
                               const SizedBox(height: 18),
@@ -428,7 +517,14 @@ class StartupDashboardView extends StatelessWidget {
                               : 'No pending reports',
                           icon: Icons.description_outlined,
                           color: const Color(0xFFD97706),
-                          onTap: () => onNavigateTab(1),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ReportsScreen(),
+                              ),
+                            );
+                          },
                         ),
                         MetricCard(
                           title: 'Upcoming Deadlines',
@@ -445,8 +541,129 @@ class StartupDashboardView extends StatelessWidget {
                 const SizedBox(height: 26),
 
                 // Startup Certification Status Preview Card
-                // CertificationPreviewCard(onNavigateTab: onNavigateTab),
-                // const SizedBox(height: 100),
+                CertificationPreviewCard(onNavigateTab: onNavigateTab),
+                const SizedBox(height: 24),
+
+                // Quick Services & Compliance Section
+                Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Compliance & Services',
+                      style: TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                Row(
+                  children: [
+                    _buildServiceCard(
+                      context,
+                      title: 'Verify ID & TIN',
+                      subtitle: 'Fayda FCN & E-Trade',
+                      icon: Icons.verified_user_outlined,
+                      color: Colors.blue,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const VerificationScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    _buildServiceCard(
+                      context,
+                      title: 'Startup Status',
+                      subtitle: 'Label tier & renewal',
+                      icon: Icons.business_outlined,
+                      color: Colors.purple,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const StartupsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                Row(
+                  children: [
+                    _buildServiceCard(
+                      context,
+                      title: 'Progress Reports',
+                      subtitle: 'Submit startup KPIs',
+                      icon: Icons.assignment_outlined,
+                      color: Colors.orange,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ReportsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    _buildServiceCard(
+                      context,
+                      title: 'Document Vault',
+                      subtitle: 'Legal & pitch docs',
+                      icon: Icons.folder_shared_outlined,
+                      color: Colors.teal,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DocumentVaultScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Compliance Notice Card
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const VerificationScreen(),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(18),
+                  child: const NoticeCard(
+                    title: 'National ID & TIN Verification Required',
+                    description:
+                        'Ensure your Fayda 16-digit FCN and business TIN are verified before submitting label certification applications.',
+                    time: 'Required for Certification',
+                    icon: Icons.shield_outlined,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 100),
               ],
             ),
           ),

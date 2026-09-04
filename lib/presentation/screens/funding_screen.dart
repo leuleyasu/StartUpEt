@@ -12,6 +12,7 @@ import '../../features/pitch/bloc/pitch_bloc.dart';
 import '../../features/pitch/bloc/pitch_event.dart';
 import '../../features/pitch/bloc/pitch_state.dart';
 import '../../models/funding.dart';
+import 'submit_pitch_modal.dart';
 
 class FundingScreen extends StatefulWidget {
   const FundingScreen({super.key});
@@ -82,8 +83,8 @@ class _FundingScreenState extends State<FundingScreen>
                   ContentType.success,
                 );
                 context.read<FundingBloc>().add(
-                  const FetchMyFundingApplications(),
-                );
+                      const FetchMyFundingApplications(),
+                    );
               } else if (state is FundingDetailLoaded) {
                 _showAwesomeSnackbar(
                   'Opportunity Saved',
@@ -212,14 +213,17 @@ class _FundingScreenState extends State<FundingScreen>
                       ),
                       onPressed: () {
                         context.read<FundingBloc>().add(
-                          SaveFunding({'opportunityId': grant.id}),
-                        );
+                              SaveFunding({'opportunityId': grant.id}),
+                            );
                       },
                     ),
                     if (grant.deadline != null)
                       Text(
                         'Deadline: ${grant.deadline}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
                       ),
                   ],
                 ),
@@ -228,21 +232,28 @@ class _FundingScreenState extends State<FundingScreen>
             const SizedBox(height: 8),
             Text(
               grant.title,
-              style: Theme.of(context).textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
             ),
             if (grant.provider != null) ...[
               const SizedBox(height: 4),
               Text(
                 'Offered by: ${grant.provider}',
-                style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
               ),
             ],
             if (grant.description != null) ...[
               const SizedBox(height: 8),
               Text(
                 grant.description!,
-                style: TextStyle(color: Colors.grey[800]),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ],
             const SizedBox(height: 12),
@@ -254,21 +265,41 @@ class _FundingScreenState extends State<FundingScreen>
                       ? 'ETB ${grant.amount!.toStringAsFixed(0)}'
                       : 'ETB 1,000,000',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                Row(
+                  children: [
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () => SubmitPitchModal.show(
+                        context,
+                        investorId: grant.id,
+                        investorName: grant.provider ?? grant.title,
+                      ),
+                      icon: const Icon(Icons.rocket_launch, size: 16),
+                      label: const Text('Pitch'),
                     ),
-                  ),
-                  onPressed: () => _applyForFunding(context, grant),
-                  child: const Text('Apply Now'),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () => _applyForFunding(context, grant),
+                      child: const Text('Apply'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -390,12 +421,14 @@ class _FundingScreenState extends State<FundingScreen>
               onPressed: () {
                 Navigator.pop(dialogContext);
                 context.read<FundingBloc>().add(
-                  ApplyForFunding(grant.id, {
-                    'company': {'name': companyController.text.trim()},
-                    'project': {'description': projectController.text.trim()},
-                    'documents': {},
-                  }),
-                );
+                      ApplyForFunding(grant.id, {
+                        'company': {'name': companyController.text.trim()},
+                        'project': {
+                          'description': projectController.text.trim()
+                        },
+                        'documents': {},
+                      }),
+                    );
               },
               child: const Text('Submit Application'),
             ),
@@ -492,14 +525,13 @@ class _FundingScreenState extends State<FundingScreen>
                   onPressed: () {
                     Navigator.pop(context);
                     context.read<PitchBloc>().add(
-                      CreatePitch({
-                        'subject': titleController.text.trim(),
-                        'message': messageController.text.trim(),
-                        'attachments': pickedFileName != null
-                            ? [pickedFileName]
-                            : [],
-                      }),
-                    );
+                          CreatePitch({
+                            'subject': titleController.text.trim(),
+                            'message': messageController.text.trim(),
+                            'attachments':
+                                pickedFileName != null ? [pickedFileName] : [],
+                          }),
+                        );
                   },
                   child: const Text('Submit Pitch'),
                 ),
@@ -518,12 +550,12 @@ class _FundingScreenState extends State<FundingScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.monetization_on_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
+            // Icon(
+            //   Icons.monetization_on_outlined,
+            //   size: 64,
+            //   color: Colors.grey[400],
+            // ),
+            // const SizedBox(height: 16),
             Text(
               title,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

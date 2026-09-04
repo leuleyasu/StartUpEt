@@ -1,8 +1,7 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
-import 'package:startupet/core/app_colors.dart';
 
 import '../../bloc/auth_bloc.dart';
 import '../../bloc/auth_event.dart';
@@ -23,7 +22,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneNumberController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _codeController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -39,7 +37,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _phoneNumberController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _codeController.dispose();
     super.dispose();
   }
 
@@ -61,8 +58,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Create Account'),
         leading: IconButton(
@@ -108,17 +107,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ..hideCurrentSnackBar()
               ..showSnackBar(snackBar);
 
-            // Navigate back to Login screen after verification
             Navigator.pop(context);
           }
         },
         builder: (context, state) {
           return Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
-                child: _buildRegistrationForm(context, state),
+                child: _buildRegistrationForm(context, state, theme, isDark),
               ),
             ),
           );
@@ -127,18 +125,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildRegistrationForm(BuildContext context, AuthState state) {
+  Widget _buildRegistrationForm(
+    BuildContext context,
+    AuthState state,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Form(
       key: _formKey,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset('assets/logo.png', height: 50),
-          const SizedBox(height: 20),
+          Image.asset(
+            isDark ? 'assets/logo_white.png' : 'assets/logo.png',
+            height: 52,
+          ),
+          const SizedBox(height: 18),
           Text(
             'Ethiopian Startup Ecosystem',
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: Colors.grey[600]),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Register Founder or Builder Profile',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -147,24 +164,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Expanded(
                 child: TextFormField(
                   controller: _firstNameController,
-                  decoration: InputDecoration(
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: AppColors.primary,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: const InputDecoration(
                     labelText: 'First Name',
                     hintText: 'Name',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.person_outline),
-                    filled: true,
-                    fillColor: Colors.white,
+                    prefixIcon: Icon(Icons.person_outline),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -178,17 +182,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Expanded(
                 child: TextFormField(
                   controller: _lastNameController,
-                  decoration: InputDecoration(
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: const InputDecoration(
                     labelText: 'Last Name',
                     hintText: 'Last Name',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.person_outline),
-                    filled: true,
-                    fillColor: Colors.white,
+                    prefixIcon: Icon(Icons.person_outline),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -205,17 +203,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
+            style: TextStyle(color: theme.colorScheme.onSurface),
+            decoration: const InputDecoration(
               labelText: 'Email Address',
               hintText: 'example@gmail.com',
-              border: const OutlineInputBorder(),
-              prefixIcon: const Icon(Icons.email_outlined),
-              filled: true,
-              fillColor: Colors.white,
+              prefixIcon: Icon(Icons.email_outlined),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -232,17 +224,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           TextFormField(
             controller: _phoneNumberController,
             keyboardType: TextInputType.phone,
-            decoration: InputDecoration(
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
+            style: TextStyle(color: theme.colorScheme.onSurface),
+            decoration: const InputDecoration(
               labelText: 'Phone Number',
               hintText: '+251945138889',
-              border: const OutlineInputBorder(),
-              prefixIcon: const Icon(Icons.phone_outlined),
-              filled: true,
-              fillColor: Colors.white,
+              prefixIcon: Icon(Icons.phone_outlined),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -255,25 +241,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
           DropdownButtonFormField<String>(
             initialValue: _selectedRole,
-            decoration: InputDecoration(
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
+            dropdownColor: theme.colorScheme.surface,
+            style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
+            decoration: const InputDecoration(
               labelText: 'Role / Category',
-              border: const OutlineInputBorder(),
-              prefixIcon: const Icon(Icons.category_outlined),
-              filled: true,
-              fillColor: Colors.white,
+              prefixIcon: Icon(Icons.category_outlined),
             ),
-            items: const [
+            items: [
               DropdownMenuItem(
                 value: 'USER',
-                child: Text('Startup (Individual/Company)'),
+                child: Text(
+                  'Startup (Individual/Company)',
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                ),
               ),
               DropdownMenuItem(
                 value: 'ECOSYSTEM_BUILDER',
-                child: Text('Ecosystem Builder'),
+                child: Text(
+                  'Ecosystem Builder',
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                ),
               ),
             ],
             onChanged: (value) {
@@ -295,14 +282,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
+            style: TextStyle(color: theme.colorScheme.onSurface),
             decoration: InputDecoration(
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
               labelText: 'Password',
               hintText: 'Enter your password',
-              border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(
@@ -314,8 +297,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   });
                 },
               ),
-              filled: true,
-              fillColor: Colors.white,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -332,14 +313,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           TextFormField(
             controller: _confirmPasswordController,
             obscureText: _obscureConfirmPassword,
+            style: TextStyle(color: theme.colorScheme.onSurface),
             decoration: InputDecoration(
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
               labelText: 'Confirm Password',
               hintText: 'Re-enter your password',
-              border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.lock_reset),
               suffixIcon: IconButton(
                 icon: Icon(
@@ -353,8 +330,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   });
                 },
               ),
-              filled: true,
-              fillColor: Colors.white,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -370,18 +345,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
           SizedBox(
             width: double.infinity,
-            height: 48,
+            height: 50,
             child: ElevatedButton(
               onPressed: state is AuthLoading ? null : _submitRegistration,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                elevation: 0,
               ),
               child: state is AuthLoading
-                  ? const SpinKitThreeBounce(color: Colors.white, size: 20)
+                  ? SpinKitThreeBounce(
+                      color: theme.colorScheme.onPrimary,
+                      size: 20,
+                    )
                   : const Text(
                       'Create Account',
                       style: TextStyle(
@@ -395,6 +374,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
           TextButton(
             onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              foregroundColor: theme.colorScheme.primary,
+            ),
             child: const Text('Already have an account? Sign In'),
           ),
         ],

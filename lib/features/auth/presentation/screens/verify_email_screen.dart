@@ -1,9 +1,8 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
-import '../../../../core/app_colors.dart';
 import '../../bloc/auth_bloc.dart';
 import '../../bloc/auth_event.dart';
 import '../../bloc/auth_state.dart';
@@ -74,8 +73,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Verify Email'),
         leading: IconButton(
@@ -119,7 +119,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
         builder: (context, state) {
           return Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
                 child: Form(
@@ -130,43 +130,40 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.mark_email_read_outlined,
                           size: 56,
-                          color: AppColors.primary,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 20),
                       Text(
                         'Verify Your Email Address',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Enter the 6-digit verification code sent to your email inbox to complete registration.',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium
-                            ?.copyWith(color: Colors.grey[700]),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 28),
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                        decoration: const InputDecoration(
                           labelText: 'Email Address',
                           hintText: 'name@example.com',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.email_outlined),
-                          filled: true,
-                          fillColor: Colors.white,
+                          prefixIcon: Icon(Icons.email_outlined),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -184,23 +181,17 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                         keyboardType: TextInputType.number,
                         maxLength: 6,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           letterSpacing: 8,
                           fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
                         ),
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                        decoration: const InputDecoration(
                           labelText: '6-Digit Verification Code',
                           hintText: '123456',
                           counterText: '',
-                          border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.pin_outlined),
-                          filled: true,
-                          fillColor: Colors.white,
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -215,21 +206,22 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
-                        height: 48,
+                        height: 50,
                         child: ElevatedButton(
                           onPressed: state is AuthLoading
                               ? null
                               : _submitVerification,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
+                            elevation: 0,
                           ),
                           child: state is AuthLoading
-                              ? const SpinKitThreeBounce(
-                                  color: Colors.white,
+                              ? SpinKitThreeBounce(
+                                  color: theme.colorScheme.onPrimary,
                                   size: 20,
                                 )
                               : const Text(
@@ -250,11 +242,22 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                             onPressed: state is AuthLoading
                                 ? null
                                 : _resendCode,
+                            style: TextButton.styleFrom(
+                              foregroundColor: theme.colorScheme.primary,
+                            ),
                             child: const Text('Resend Code'),
                           ),
-                          const Text('•'),
+                          Text(
+                            '•',
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                           TextButton(
                             onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              foregroundColor: theme.colorScheme.primary,
+                            ),
                             child: const Text('Back to Sign In'),
                           ),
                         ],

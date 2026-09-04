@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/api_client.dart';
+import '../../../models/user.dart';
 import '../services/auth_service.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -21,6 +22,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthForgotPasswordRequested>(_onForgotPasswordRequested);
     on<AuthFetchSessionsRequested>(_onFetchSessionsRequested);
     on<AuthTerminateSessionRequested>(_onTerminateSessionRequested);
+    on<AuthTerminateOtherSessionsRequested>(
+      _onTerminateOtherSessionsRequested,
+    );
     on<AuthLogout>(_onLogout);
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
   }
@@ -189,10 +193,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthFetchSessionsRequested event,
     Emitter<AuthState> emit,
   ) async {
+    final previousUser = state is AuthAuthenticated
+        ? (state as AuthAuthenticated).user
+        : null;
     final result = await _authService.getUserSessions();
     result.fold(
       (failure) => emit(AuthError(failure.message)),
-      (sessions) => emit(AuthSessionsLoaded(sessions)),
+      (sessions) {
+        final user = previousUser ??
+            User(
+              id: 'user_session_${DateTime.now().millisecondsSinceEpoch}',
+              email: '',
+            );
+        emit(AuthSessionsLoaded(user, sessions));
+      },
     );
   }
 
@@ -201,6 +215,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     final result = await _authService.terminateSession(event.sessionId);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => add(const AuthFetchSessionsRequested()),
+    );
+  }
+
+  Future<void> _onTerminateOtherSessionsRequested(
+    AuthTerminateOtherSessionsRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final result = await _authService.terminateOtherSessions();
     result.fold(
       (failure) => emit(AuthError(failure.message)),
       (_) => add(const AuthFetchSessionsRequested()),

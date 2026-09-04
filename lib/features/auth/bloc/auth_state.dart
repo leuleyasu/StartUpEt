@@ -62,13 +62,13 @@ class AuthForgotPasswordSuccess extends AuthState {
   List<Object?> get props => [message];
 }
 
-class AuthSessionsLoaded extends AuthState {
+class AuthSessionsLoaded extends AuthAuthenticated {
   final List<UserSessionInfo> sessions;
 
-  const AuthSessionsLoaded(this.sessions);
+  const AuthSessionsLoaded(super.user, this.sessions);
 
   @override
-  List<Object?> get props => [sessions];
+  List<Object?> get props => [user, sessions];
 }
 
 class AuthError extends AuthState {

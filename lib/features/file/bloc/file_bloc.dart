@@ -28,7 +28,16 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
   Future<void> _onUpload(UploadFile event, Emitter<FileState> emit) async {
     emit(const FileLoading());
-    final r = await _service.uploadFile(event.filePath);
+    final r = await _service.uploadFile(
+      event.filePath,
+      category: event.category,
+      categoryString: event.categoryString,
+      isPublic: event.isPublic,
+      entityType: event.entityType,
+      entityId: event.entityId,
+      directory: event.directory,
+      metadata: event.metadata,
+    );
     r.fold((f) => emit(FileError(f.message)), (d) => emit(FileUploaded(d)));
   }
 

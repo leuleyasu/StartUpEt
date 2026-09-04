@@ -34,6 +34,8 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Applications'),
@@ -61,8 +63,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
             return const Center(child: CircularProgressIndicator());
           }
           if (state is ApplicationError) {
-            final isNotFound =
-                state.message.contains('404') ||
+            final isNotFound = state.message.contains('404') ||
                 state.message.toLowerCase().contains('not found') ||
                 state.message.toLowerCase().contains('no applications');
 
@@ -96,8 +97,8 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
                       ElevatedButton.icon(
                         onPressed: () {
                           context.read<ApplicationBloc>().add(
-                            const FetchApplications(),
-                          );
+                                const FetchApplications(),
+                              );
                         },
                         icon: const Icon(Icons.refresh),
                         label: const Text('Retry'),
@@ -240,20 +241,17 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
 
   Widget _buildApplicationCard(BuildContext context, Application app) {
     final statusColor = _getStatusColor(app.status);
-    final startupName =
-        app.data?['startupName']?.toString() ??
+    final startupName = app.data?['startupName']?.toString() ??
         app.data?['startup_name']?.toString() ??
         'Startup Application';
     final initial = startupName.trim().isNotEmpty
         ? startupName.trim()[0].toUpperCase()
         : 'S';
 
-    final industry =
-        app.data?['industry']?.toString() ??
+    final industry = app.data?['industry']?.toString() ??
         app.data?['sector']?.toString() ??
         'General';
-    final category =
-        app.type ??
+    final category = app.type ??
         app.data?['typeOfCompany']?.toString() ??
         app.data?['stage']?.toString() ??
         'INITIAL';
@@ -288,15 +286,19 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200, width: 1.2),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+          width: 1.2,
+        ),
         boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
+          if (Theme.of(context).brightness == Brightness.light)
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
         ],
       ),
       child: Material(
@@ -358,10 +360,10 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
                         children: [
                           Text(
                             startupName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -371,7 +373,9 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
                             'Filed on $formattedDate',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade600,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -404,7 +408,13 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
                 ),
 
                 const SizedBox(height: 14),
-                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                Divider(
+                  height: 1,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.2),
+                ),
                 const SizedBox(height: 14),
 
                 // Details Row: Focus (Industry) & Category
@@ -513,12 +523,11 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDraft
-                          ? AppColors.primary
-                          : const Color(0xFFF8FAFC),
-                      foregroundColor: isDraft
-                          ? Colors.white
-                          : AppColors.primary,
+                      backgroundColor: AppColors.primary,
+                      // : const Color(0xFFF8FAFC),
+                      foregroundColor:
+                          // ? Colors.white
+                          AppColors.primary,
                       elevation: 0,
                       side: isDraft
                           ? BorderSide.none
@@ -539,6 +548,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
                       isDraft ? 'Continue Application' : 'View Details',
                       style: const TextStyle(
                         fontSize: 13,
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -558,10 +568,12 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
   ) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
+        final theme = Theme.of(context);
         final statusColor = _getStatusColor(app.status);
         final name =
             app.data?['startupName']?.toString() ?? 'Startup Application';
@@ -582,7 +594,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: theme.colorScheme.outline.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -594,9 +606,10 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
                   Expanded(
                     child: Text(
                       name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -623,14 +636,17 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
               const SizedBox(height: 12),
               Text(
                 '$industry • $stage',
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
               const Divider(height: 24),
-              _detailRow('Application ID', app.id),
-              _detailRow('Email Contact', email),
-              _detailRow('Phone Number', phone),
+              _detailRow(context, 'Application ID', app.id),
+              _detailRow(context, 'Email Contact', email),
+              _detailRow(context, 'Phone Number', phone),
               if (app.createdAt != null)
-                _detailRow('Submitted Date', app.createdAt.toString()),
+                _detailRow(context, 'Submitted Date', app.createdAt.toString()),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
@@ -646,16 +662,27 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
     );
   }
 
-  Widget _detailRow(String label, String value) {
+  Widget _detailRow(BuildContext context, String label, String value) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          Text(
+            label,
+            style: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 13,
+            ),
+          ),
           Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
         ],
       ),

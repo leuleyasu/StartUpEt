@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/app_colors.dart';
 import '../../features/startup/bloc/startup_bloc.dart';
 import '../../features/startup/bloc/startup_state.dart';
+import '../screens/certifications_screen.dart';
 
 class CertificationPreviewCard extends StatelessWidget {
   final Function(int) onNavigateTab;
@@ -18,12 +19,15 @@ class CertificationPreviewCard extends StatelessWidget {
     return BlocBuilder<StartupBloc, StartupState>(
       builder: (context, state) {
         if (state is StartupLoading) {
+          final theme = Theme.of(context);
           return Container(
             height: 110,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+              ),
             ),
             child: const Center(
               child: CircularProgressIndicator(strokeWidth: 2.5),
@@ -151,7 +155,15 @@ class CertificationPreviewCard extends StatelessWidget {
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () => onNavigateTab(2),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const CertificationsScreen(),
+                              ),
+                            );
+                          },
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -185,22 +197,27 @@ class CertificationPreviewCard extends StatelessWidget {
           );
         }
 
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+
         // Empty state when no startup label exists yet
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: AppColors.primary.withValues(alpha: 0.2),
               width: 1.2,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
+            boxShadow: isDark
+                ? []
+                : [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
           ),
           child: Padding(
             padding: const EdgeInsets.all(18),
@@ -223,12 +240,12 @@ class CertificationPreviewCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'No Startup Label Registered',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: Color(0xFF0F172A),
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 3),
@@ -236,7 +253,7 @@ class CertificationPreviewCard extends StatelessWidget {
                         'Apply to get certified under StartupET',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],

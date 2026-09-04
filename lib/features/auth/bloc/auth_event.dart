@@ -114,6 +114,10 @@ class AuthTerminateSessionRequested extends AuthEvent {
   List<Object?> get props => [sessionId];
 }
 
+class AuthTerminateOtherSessionsRequested extends AuthEvent {
+  const AuthTerminateOtherSessionsRequested();
+}
+
 class AuthLogout extends AuthEvent {
   const AuthLogout();
 }
