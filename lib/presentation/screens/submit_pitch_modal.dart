@@ -79,6 +79,25 @@ class _SubmitPitchModalState extends State<SubmitPitchModal> {
       );
       final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
       if (file != null) {
+        final length = await file.length();
+        if (length > 10 * 1024 * 1024) {
+          if (!mounted) return;
+          final snackBar = SnackBar(
+            elevation: 0,
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.transparent,
+            content: const AwesomeSnackbarContent(
+              title: 'File Too Large',
+              message: 'The pitch deck exceeds the 10 MB maximum upload limit.',
+              contentType: ContentType.warning,
+            ),
+          );
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(snackBar);
+          return;
+        }
+
         setState(() {
           _isUploadingFile = true;
         });

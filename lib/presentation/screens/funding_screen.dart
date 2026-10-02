@@ -1,5 +1,4 @@
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -9,7 +8,6 @@ import '../../features/funding/bloc/funding_bloc.dart';
 import '../../features/funding/bloc/funding_event.dart';
 import '../../features/funding/bloc/funding_state.dart';
 import '../../features/pitch/bloc/pitch_bloc.dart';
-import '../../features/pitch/bloc/pitch_event.dart';
 import '../../features/pitch/bloc/pitch_state.dart';
 import '../../models/funding.dart';
 import 'submit_pitch_modal.dart';
@@ -124,7 +122,12 @@ class _FundingScreenState extends State<FundingScreen>
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showSubmitPitchDialog(context),
+        onPressed: () async {
+          final submitted = await SubmitPitchModal.show(context);
+          if (submitted == true && context.mounted) {
+            context.read<FundingBloc>().add(const FetchMyFundingApplications());
+          }
+        },
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.send),
@@ -438,110 +441,6 @@ class _FundingScreenState extends State<FundingScreen>
     );
   }
 
-  void _showSubmitPitchDialog(BuildContext context) {
-    final titleController = TextEditingController();
-    final messageController = TextEditingController();
-    String? pickedFileName;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: const Text('Submit Pitch Deck'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(
-                      hintText: 'Pitch Subject / Title',
-                      prefixIcon: Icon(Icons.title),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: messageController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      hintText: 'Message to Investors / Executive Summary',
-                      prefixIcon: Icon(Icons.notes),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      try {
-                        final XTypeGroup typeGroup = const XTypeGroup(
-                          label: 'pitch_decks',
-                          extensions: ['pdf', 'pptx', 'ppt'],
-                        );
-                        final XFile? file = await openFile(
-                          acceptedTypeGroups: [typeGroup],
-                        );
-                        if (file != null) {
-                          setDialogState(() {
-                            pickedFileName = file.name;
-                          });
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          _showAwesomeSnackbar(
-                            'File Error',
-                            'Could not attach file: $e',
-                            ContentType.failure,
-                          );
-                        }
-                      }
-                    },
-                    icon: Icon(
-                      pickedFileName != null
-                          ? Icons.check_circle
-                          : Icons.upload_file,
-                      color: pickedFileName != null ? Colors.green : null,
-                    ),
-                    label: Text(
-                      pickedFileName ?? 'Attach Pitch Deck (PDF)',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    context.read<PitchBloc>().add(
-                          CreatePitch({
-                            'subject': titleController.text.trim(),
-                            'message': messageController.text.trim(),
-                            'attachments':
-                                pickedFileName != null ? [pickedFileName] : [],
-                          }),
-                        );
-                  },
-                  child: const Text('Submit Pitch'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 
   Widget _buildEmptyState(String title, String subtitle) {
     return Center(

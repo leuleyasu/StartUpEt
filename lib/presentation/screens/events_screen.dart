@@ -1,5 +1,6 @@
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -355,27 +356,231 @@ class _EventsScreenState extends State<EventsScreen>
             itemCount: passes.length,
             itemBuilder: (context, index) {
               final pass = passes[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  leading: const CircleAvatar(
-                    backgroundColor: AppColors.primary,
-                    child: Icon(Icons.qr_code, color: Colors.white),
+              final code = pass.confirmationCode;
+              final isConfirmed =
+                  (pass.status ?? '').toUpperCase() == 'CONFIRMED';
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.2),
                   ),
-                  title: Text(
-                    pass.eventTitle ?? 'Ecosystem Event Pass',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      Text('Attendee: ${pass.name ?? pass.email ?? 'Member'}'),
-                      const SizedBox(height: 4),
-                      Text('Status: ${pass.status ?? 'CONFIRMED'}'),
-                    ],
-                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Ticket Top
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isConfirmed
+                                      ? Colors.green.withValues(alpha: 0.12)
+                                      : Colors.orange.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isConfirmed
+                                          ? Icons.check_circle
+                                          : Icons.schedule,
+                                      size: 14,
+                                      color: isConfirmed
+                                          ? Colors.green
+                                          : Colors.orange,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      pass.status ?? 'CONFIRMED',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: isConfirmed
+                                          ? Colors.green
+                                          : Colors.orange,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                children: const [
+                                  Icon(Icons.confirmation_number_outlined,
+                                      size: 16, color: AppColors.primary),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'E-PASS',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            pass.eventTitle ?? 'Ecosystem Event Admission',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Attendee: ${pass.name ?? pass.email ?? 'Registered Founder'}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Ticket Perforated Separator
+                    Row(
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            borderRadius: const BorderRadius.only(
+                              topRight: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              const dashWidth = 5.0;
+                              const dashSpace = 4.0;
+                              final dashCount = (constraints.constrainWidth() /
+                                      (dashWidth + dashSpace))
+                                  .floor();
+                              return Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: List.generate(
+                                  dashCount,
+                                  (_) => Container(
+                                    width: dashWidth,
+                                    height: 1,
+                                    color: Colors.grey.withValues(alpha: 0.35),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        Container(
+                          width: 12,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              bottomLeft: Radius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Ticket Bottom: Admission Pass Code
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'CHECK-IN CODE',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey.shade500,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                code != null && code.isNotEmpty
+                                    ? code
+                                    : pass.id,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.copy, size: 20),
+                                tooltip: 'Copy Pass Code',
+                                onPressed: () {
+                                  final textToCopy =
+                                      code != null && code.isNotEmpty
+                                          ? code
+                                          : pass.id;
+                                  Clipboard.setData(
+                                      ClipboardData(text: textToCopy));
+                                  _showAwesomeSnackbar(
+                                    'Code Copied',
+                                    'Admission code copied: $textToCopy',
+                                    ContentType.success,
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 4),
+                              const CircleAvatar(
+                                radius: 18,
+                                backgroundColor: AppColors.primary,
+                                child: Icon(Icons.qr_code_2,
+                                    color: Colors.white, size: 20),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -459,52 +664,104 @@ class _EventsScreenState extends State<EventsScreen>
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text('Book $spaceName'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Select start date for workspace reservation:'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: dateController,
-                decoration: const InputDecoration(
-                  hintText: 'YYYY-MM-DD',
-                  prefixIcon: Icon(Icons.calendar_today),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text('Book $spaceName'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Select start date for workspace reservation:'),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: dateController,
+                    readOnly: true,
+                    onTap: () async {
+                      final now = DateTime.now();
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: now,
+                        firstDate: now,
+                        lastDate: now.add(const Duration(days: 365)),
+                      );
+                      if (picked != null) {
+                        final y = picked.year.toString().padLeft(4, '0');
+                        final m = picked.month.toString().padLeft(2, '0');
+                        final d = picked.day.toString().padLeft(2, '0');
+                        setDialogState(() {
+                          dateController.text = '$y-$m-$d';
+                        });
+                      }
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Tap to select date',
+                      prefixIcon: const Icon(Icons.calendar_today),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.edit_calendar),
+                        onPressed: () async {
+                          final now = DateTime.now();
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: now,
+                            firstDate: now,
+                            lastDate: now.add(const Duration(days: 365)),
+                          );
+                          if (picked != null) {
+                            final y = picked.year.toString().padLeft(4, '0');
+                            final m = picked.month.toString().padLeft(2, '0');
+                            final d = picked.day.toString().padLeft(2, '0');
+                            setDialogState(() {
+                              dateController.text = '$y-$m-$d';
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                context.read<EcosystemBloc>().add(
-                  CreateEcosystemBooking({
-                    'spaceName': spaceName,
-                    'startDate': dateController.text.trim(),
-                  }),
-                );
-                _showAwesomeSnackbar(
-                  'Booking Sent',
-                  'Workspace reservation requested for $spaceName.',
-                  ContentType.success,
-                );
-              },
-              child: const Text('Confirm Booking'),
-            ),
-          ],
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    final dateText = dateController.text.trim();
+                    if (dateText.isEmpty) {
+                      _showAwesomeSnackbar(
+                        'Date Required',
+                        'Please select a reservation date before confirming.',
+                        ContentType.warning,
+                      );
+                      return;
+                    }
+                    Navigator.pop(context);
+                    context.read<EcosystemBloc>().add(
+                      CreateEcosystemBooking({
+                        'spaceName': spaceName,
+                        'startDate': dateText,
+                      }),
+                    );
+                    _showAwesomeSnackbar(
+                      'Booking Sent',
+                      'Workspace reservation requested for $spaceName.',
+                      ContentType.success,
+                    );
+                  },
+                  child: const Text('Confirm Booking'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

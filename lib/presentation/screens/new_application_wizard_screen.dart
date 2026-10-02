@@ -221,6 +221,26 @@ class _NewApplicationWizardScreenState
       );
 
       if (file != null) {
+        final length = await file.length();
+        if (length > 10 * 1024 * 1024) {
+          if (mounted) {
+            final snackBar = SnackBar(
+              elevation: 0,
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.transparent,
+              content: const AwesomeSnackbarContent(
+                title: 'File Too Large',
+                message:
+                    'The selected document exceeds the 10 MB maximum upload limit.',
+                contentType: ContentType.warning,
+              ),
+            );
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(snackBar);
+          }
+          return;
+        }
         onPicked(file.name, file.path);
       }
     } catch (e) {

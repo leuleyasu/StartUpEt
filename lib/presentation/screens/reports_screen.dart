@@ -74,6 +74,18 @@ class _ReportsScreenState extends State<ReportsScreen>
     final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
     if (file == null) return;
 
+    final length = await file.length();
+    if (length > 10 * 1024 * 1024) {
+      if (mounted) {
+        _showAwesomeSnackbar(
+          'File Too Large',
+          'The selected document exceeds the 10 MB maximum upload limit.',
+          ContentType.warning,
+        );
+      }
+      return;
+    }
+
     setState(() {
       _isUploadingFile = true;
     });
