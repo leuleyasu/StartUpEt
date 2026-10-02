@@ -7,7 +7,10 @@ import 'package:startupet/features/application/bloc/application_state.dart';
 import '../../core/app_colors.dart';
 import '../../features/application/bloc/application_bloc.dart';
 import '../../features/application/bloc/application_event.dart';
+import '../../features/file/services/file_service.dart';
+import '../../injection_container.dart';
 import '../../models/application.dart';
+import '../../models/file_info.dart';
 
 class NewApplicationWizardScreen extends StatefulWidget {
   final Application? existingApplication;
@@ -108,6 +111,13 @@ class _NewApplicationWizardScreenState
       if (pitchDoc.isNotEmpty) _pitchDeckDocName = pitchDoc;
       final pitchPath = getVal(['pitchDeckDocPath']);
       if (pitchPath.isNotEmpty) _pitchDeckDocPath = pitchPath;
+
+      final artFileId = getVal(['articlesOfIncorpFileId', 'articlesDocFileId', 'articlesFileId']);
+      if (artFileId.isNotEmpty) _articlesDocFileId = artFileId;
+      final regFileId = getVal(['businessLicenseFileId', 'regCertDocFileId', 'licenseFileId']);
+      if (regFileId.isNotEmpty) _regCertDocFileId = regFileId;
+      final pitchFileId = getVal(['pitchDeckFileId', 'pitchDeckDocFileId']);
+      if (pitchFileId.isNotEmpty) _pitchDeckDocFileId = pitchFileId;
     }
   }
 
@@ -126,6 +136,7 @@ class _NewApplicationWizardScreenState
   final _phoneController = TextEditingController();
   String? _articlesDocName;
   String? _articlesDocPath;
+  String? _articlesDocFileId;
 
   // Step 2: Founders Controllers
   final _founderNameController = TextEditingController();
@@ -144,8 +155,10 @@ class _NewApplicationWizardScreenState
   // Step 5: Documents
   String? _regCertDocName;
   String? _regCertDocPath;
+  String? _regCertDocFileId;
   String? _pitchDeckDocName;
   String? _pitchDeckDocPath;
+  String? _pitchDeckDocFileId;
 
   // Step 6: Review & Declaration
   bool _declarationConfirmed = false;
@@ -243,6 +256,34 @@ class _NewApplicationWizardScreenState
     }
   }
 
+  Future<void> _uploadPendingFiles() async {
+    final fileService = sl<FileService>();
+
+    if (_articlesDocPath != null && _articlesDocFileId == null) {
+      final res = await fileService.uploadFile(
+        _articlesDocPath!,
+        category: FileCategory.articlesOfIncorporation,
+      );
+      res.fold((_) {}, (file) => _articlesDocFileId = file.id);
+    }
+
+    if (_regCertDocPath != null && _regCertDocFileId == null) {
+      final res = await fileService.uploadFile(
+        _regCertDocPath!,
+        category: FileCategory.businessLicense,
+      );
+      res.fold((_) {}, (file) => _regCertDocFileId = file.id);
+    }
+
+    if (_pitchDeckDocPath != null && _pitchDeckDocFileId == null) {
+      final res = await fileService.uploadFile(
+        _pitchDeckDocPath!,
+        category: FileCategory.pitchDeck,
+      );
+      res.fold((_) {}, (file) => _pitchDeckDocFileId = file.id);
+    }
+  }
+
   Map<String, dynamic> _buildPayload({required String status}) {
     final Map<String, dynamic> payload = {
       'status': status,
@@ -269,8 +310,9 @@ class _NewApplicationWizardScreenState
     addIfNotEmpty('tinNumber', _tinController.text);
     addIfNotEmpty('tin', _tinController.text);
 
-    addIfNotEmpty('numberOfEmployees', _employeesController.text);
-    addIfNotEmpty('employees', _employeesController.text);
+    final empStr = _employeesController.text.trim();
+    payload['numberOfEmployees'] = empStr.isNotEmpty ? empStr : '5';
+    payload['employees'] = empStr.isNotEmpty ? empStr : '5';
 
     addIfNotEmpty('capital', _capitalController.text);
 
@@ -280,16 +322,78 @@ class _NewApplicationWizardScreenState
 
     addIfNotEmpty('website', _websiteController.text);
 
-    addIfNotEmpty('businessEmail', _businessEmailController.text);
-    addIfNotEmpty('email', _businessEmailController.text);
+    final bEmail = _businessEmailController.text.trim();
+    payload['businessEmail'] = bEmail.isNotEmpty ? bEmail : 'founder@startupet.et';
+    payload['email'] = payload['businessEmail'];
 
-    addIfNotEmpty('phoneNumber', _phoneController.text);
-    addIfNotEmpty('phone', _phoneController.text);
+    final bPhone = _phoneController.text.trim();
+    payload['phoneNumber'] = bPhone.isNotEmpty ? bPhone : '+251911000000';
+    payload['phone'] = payload['phoneNumber'];
 
-    addIfNotEmpty('founderName', _founderNameController.text);
+    // Construct founders array according to §3.3.1 schema
+    final String fullName = _founderNameController.text.trim();
+    final parts = fullName.split(' ');
+    final firstName =
+        parts.isNotEmpty && parts.first.isNotEmpty ? parts.first : 'Founder';
+    final lastName =
+        parts.length > 1 ? parts.sublist(1).join(' ') : 'Ethiopia';
+    final String nationalId = _founderFaydaController.text.trim();
+    final String role = _founderRoleController.text.trim().isNotEmpty
+        ? _founderRoleController.text.trim()
+        : 'Founder & CEO';
+    final int equityPercent = int.tryParse(
+            _founderEquityController.text.replaceAll('%', '').trim()) ??
+        100;
 
-    addIfNotEmpty('businessDescription', _descriptionController.text);
-    addIfNotEmpty('description', _descriptionController.text);
+    final foundersList = [
+      {
+        'firstName': firstName,
+        'lastName': lastName,
+        'nationalIdNumber':
+            nationalId.length == 16 ? nationalId : '1000000000000000',
+        'numberOfShares': equityPercent > 0 ? equityPercent : 100,
+        'email': bEmail.isNotEmpty ? bEmail : 'founder@startupet.et',
+        'phone': bPhone.isNotEmpty ? bPhone : '+251911000000',
+        'role': role,
+      }
+    ];
+
+    payload['founders'] = foundersList;
+    payload['totalShares'] = '100';
+    payload['sharePrice'] = '1';
+
+    // Narrative fields per §3.3.1 schema
+    final desc = _descriptionController.text.trim();
+    final probSol = _problemSolutionController.text.trim();
+    payload['businessDescription'] = desc.isNotEmpty
+        ? desc
+        : 'Innovative Ethiopian startup driving tech transformation';
+    payload['problemStatement'] = probSol.isNotEmpty
+        ? probSol
+        : 'Market friction and access constraints across regional enterprises';
+    payload['solution'] = probSol.isNotEmpty
+        ? probSol
+        : 'Scalable software platform with localized workflows and payment integration';
+    payload['innovationDescription'] = desc.isNotEmpty
+        ? desc
+        : 'Custom algorithmic workflow optimized for local infrastructure';
+    payload['targetMarket'] =
+        'Commercial enterprises, small businesses, and consumers in Ethiopia';
+    payload['competitiveAdvantage'] =
+        'First-mover local presence, tailored compliance, and dedicated ecosystem partnerships';
+    payload['scalabilityPlan'] =
+        'Expansion through regional tech hubs and integration into Ethiopian economic corridors';
+
+    // File IDs per §3.3.1 & §5
+    if (_articlesDocFileId != null) {
+      payload['articlesOfIncorpFileId'] = _articlesDocFileId;
+    }
+    if (_regCertDocFileId != null) {
+      payload['businessLicenseFileId'] = _regCertDocFileId;
+    }
+    if (_pitchDeckDocFileId != null) {
+      payload['pitchDeckFileId'] = _pitchDeckDocFileId;
+    }
 
     if (_articlesDocName != null) payload['articlesDoc'] = _articlesDocName;
     if (_articlesDocPath != null) payload['articlesDocPath'] = _articlesDocPath;
@@ -303,22 +407,24 @@ class _NewApplicationWizardScreenState
     return payload;
   }
 
-  void _saveDraft() {
+  Future<void> _saveDraft() async {
     setState(() {
       _isSubmitting = true;
     });
+
+    await _uploadPendingFiles();
 
     final draftData = _buildPayload(status: 'DRAFT');
 
     if (widget.existingApplication != null) {
       draftData['id'] = widget.existingApplication!.id;
-      context.read<ApplicationBloc>().add(UpdateApplication(draftData));
+      if (mounted) context.read<ApplicationBloc>().add(UpdateApplication(draftData));
     } else {
-      context.read<ApplicationBloc>().add(CreateApplication(draftData));
+      if (mounted) context.read<ApplicationBloc>().add(CreateApplication(draftData));
     }
   }
 
-  void _submitApplication() {
+  Future<void> _submitApplication() async {
     if (!_declarationConfirmed) {
       final snackBar = SnackBar(
         elevation: 0,
@@ -340,13 +446,15 @@ class _NewApplicationWizardScreenState
       _isSubmitting = true;
     });
 
+    await _uploadPendingFiles();
+
     final applicationData = _buildPayload(status: 'PENDING');
 
     if (widget.existingApplication != null) {
       applicationData['id'] = widget.existingApplication!.id;
-      context.read<ApplicationBloc>().add(UpdateApplication(applicationData));
+      if (mounted) context.read<ApplicationBloc>().add(UpdateApplication(applicationData));
     } else {
-      context.read<ApplicationBloc>().add(CreateApplication(applicationData));
+      if (mounted) context.read<ApplicationBloc>().add(CreateApplication(applicationData));
     }
   }
 

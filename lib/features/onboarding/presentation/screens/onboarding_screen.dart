@@ -368,39 +368,39 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           const SizedBox(width: 52),
 
                         // Next Button
-                        // ElevatedButton(
-                        //   onPressed: _nextPage,
-                        //   style: ElevatedButton.styleFrom(
-                        //     backgroundColor: isDark
-                        //         ? AppColors.darkPrimary
-                        //         : AppColors.primary,
-                        //     foregroundColor: Colors.white,
-                        //     elevation: 4,
-                        //     shadowColor:
-                        //         AppColors.primary.withValues(alpha: 0.4),
-                        //     shape: RoundedRectangleBorder(
-                        //       borderRadius: BorderRadius.circular(18),
-                        //     ),
-                        //     padding: const EdgeInsets.symmetric(
-                        //       horizontal: 28,
-                        //       vertical: 16,
-                        //     ),
-                        //   ),
-                        //   child: const Row(
-                        //     mainAxisSize: MainAxisSize.min,
-                        //     children: [
-                        //       Text(
-                        //         'Next',
-                        //         style: TextStyle(
-                        //           fontSize: 15,
-                        //           fontWeight: FontWeight.w700,
-                        //         ),
-                        //       ),
-                        //       SizedBox(width: 8),
-                        //       Icon(Icons.arrow_forward_rounded, size: 18),
-                        //     ],
-                        //   ),
-                        // ),
+                        ElevatedButton(
+                          onPressed: _nextPage,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isDark
+                                ? AppColors.darkPrimary
+                                : AppColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 4,
+                            shadowColor:
+                                AppColors.primary.withValues(alpha: 0.4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 28,
+                              vertical: 16,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Next',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.arrow_forward_rounded, size: 18),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ] else ...[

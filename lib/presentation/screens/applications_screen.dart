@@ -34,8 +34,6 @@ class _ApplicationsScreenState extends State<ApplicationsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isLight = Theme.of(context).brightness == Brightness.light;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Applications'),

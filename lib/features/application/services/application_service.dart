@@ -85,11 +85,9 @@ class ApplicationService {
     Map<String, dynamic> data,
   ) async {
     try {
-      final id = data['id'];
-      final endpoint = id != null
-          ? ApiEndpoints.application(id.toString())
-          : ApiEndpoints.applications;
-      final response = await _client.patch(endpoint, data: data);
+      // Reference §3.3: PATCH is only supported on collection route /api/applications
+      // with required `id` in body (no PATCH on /api/applications/[id])
+      final response = await _client.patch(ApiEndpoints.applications, data: data);
       if (response.statusCode != null && response.statusCode! >= 400) {
         return Left(_extractError(response));
       }

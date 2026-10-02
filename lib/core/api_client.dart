@@ -17,7 +17,7 @@ class ApiClient {
         connectTimeout: ApiConfig.connectTimeout,
         receiveTimeout: ApiConfig.receiveTimeout,
         followRedirects: true,
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status >= 200 && status < 300,
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -54,38 +54,85 @@ class ApiClient {
     );
   }
 
+  String _extractErrorMessage(dynamic data, String defaultMsg) {
+    if (data is Map) {
+      final err = data['error'] ?? data['message'];
+      if (err != null && err.toString().trim().isNotEmpty) {
+        return err.toString().trim();
+      }
+    } else if (data is String && data.trim().isNotEmpty) {
+      return data.trim();
+    }
+    return defaultMsg;
+  }
+
   InterceptorsWrapper _errorInterceptor() {
     return InterceptorsWrapper(
       onError: (error, handler) async {
         final statusCode = error.response?.statusCode;
+        final errorData = error.response?.data;
         if (statusCode == 401) {
           // If token was revoked or invalid, clear token from storage
           await clearApiKey();
           return handler.reject(
             DioException(
               requestOptions: error.requestOptions,
-              error: UnauthorizedException(data: error.response?.data),
+              error: UnauthorizedException(
+                message: _extractErrorMessage(errorData, 'Unauthorized - Session expired'),
+                data: errorData,
+              ),
             ),
           );
         } else if (statusCode == 403) {
           return handler.reject(
             DioException(
               requestOptions: error.requestOptions,
-              error: ForbiddenException(data: error.response?.data),
+              error: ForbiddenException(
+                message: _extractErrorMessage(errorData, 'Forbidden - Insufficient permissions'),
+                data: errorData,
+              ),
             ),
           );
         } else if (statusCode == 404) {
           return handler.reject(
             DioException(
               requestOptions: error.requestOptions,
-              error: NotFoundException(data: error.response?.data),
+              error: NotFoundException(
+                message: _extractErrorMessage(errorData, 'Resource not found'),
+                data: errorData,
+              ),
             ),
           );
-        } else if (statusCode == 500) {
+        } else if (statusCode == 400) {
           return handler.reject(
             DioException(
               requestOptions: error.requestOptions,
-              error: ServerException(data: error.response?.data),
+              error: ApiException(
+                message: _extractErrorMessage(errorData, 'Validation error'),
+                statusCode: 400,
+                data: errorData,
+              ),
+            ),
+          );
+        } else if (statusCode == 429) {
+          return handler.reject(
+            DioException(
+              requestOptions: error.requestOptions,
+              error: ApiException(
+                message: _extractErrorMessage(errorData, 'Too many requests. Please try again later.'),
+                statusCode: 429,
+                data: errorData,
+              ),
+            ),
+          );
+        } else if (statusCode != null && statusCode >= 500) {
+          return handler.reject(
+            DioException(
+              requestOptions: error.requestOptions,
+              error: ServerException(
+                message: _extractErrorMessage(errorData, 'Server error'),
+                data: errorData,
+              ),
             ),
           );
         }

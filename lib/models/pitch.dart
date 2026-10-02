@@ -23,20 +23,44 @@ class Pitch {
     this.createdAt,
   });
 
-  factory Pitch.fromJson(Map<String, dynamic> json) => Pitch(
-    id: (json['id'] ?? json['_id'] ?? '').toString(),
-    investorId: json['investorId']?.toString(),
-    subject: (json['subject'] ?? json['title'])?.toString(),
-    message: (json['message'] ?? json['description'])?.toString(),
-    title: (json['title'] ?? json['subject'])?.toString(),
-    description: (json['description'] ?? json['message'])?.toString(),
-    amount: (json['amount'] as num?)?.toDouble(),
-    status: json['status']?.toString(),
-    attachments: json['attachments'] is List
-        ? (json['attachments'] as List).map((e) => e.toString()).toList()
-        : null,
-    createdAt: json['createdAt']?.toString(),
-  );
+  factory Pitch.fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> data = (json['data'] is Map<String, dynamic>)
+        ? json['data'] as Map<String, dynamic>
+        : json;
+
+    return Pitch(
+      id: (data['id'] ?? data['_id'] ?? json['id'] ?? '').toString(),
+      investorId: (data['investorId'] ?? json['investorId'])?.toString(),
+      subject: (data['subject'] ??
+              data['title'] ??
+              json['subject'] ??
+              json['title'])
+          ?.toString(),
+      message: (data['message'] ??
+              data['description'] ??
+              json['message'] ??
+              json['description'])
+          ?.toString(),
+      title: (data['title'] ??
+              data['subject'] ??
+              json['title'] ??
+              json['subject'])
+          ?.toString(),
+      description: (data['description'] ??
+              data['message'] ??
+              json['description'] ??
+              json['message'])
+          ?.toString(),
+      amount: ((data['amount'] ?? json['amount']) as num?)?.toDouble(),
+      status: (data['status'] ?? json['status'])?.toString(),
+      attachments: (data['attachments'] ?? json['attachments']) is List
+          ? ((data['attachments'] ?? json['attachments']) as List)
+              .map((e) => e.toString())
+              .toList()
+          : null,
+      createdAt: (data['createdAt'] ?? json['createdAt'])?.toString(),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,

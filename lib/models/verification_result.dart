@@ -7,9 +7,13 @@ class VerificationResult {
 
   factory VerificationResult.fromJson(Map<String, dynamic> json) =>
       VerificationResult(
-        verified: json['verified'] as bool? ?? false,
-        message: json['message'] as String?,
-        data: json['data'] as Map<String, dynamic>?,
+        verified: json['verified'] == true || json['success'] == true,
+        message: (json['message'] ?? json['error'])?.toString(),
+        data: json['data'] is Map<String, dynamic>
+            ? json['data'] as Map<String, dynamic>
+            : (json['data'] is Map
+                ? Map<String, dynamic>.from(json['data'] as Map)
+                : null),
       );
 
   Map<String, dynamic> toJson() => {

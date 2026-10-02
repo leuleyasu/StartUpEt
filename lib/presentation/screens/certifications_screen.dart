@@ -297,8 +297,13 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
                                 ),
                               ),
                               onPressed: () {
+                                final certTargetId =
+                                    (startup.certificateId != null &&
+                                            startup.certificateId!.isNotEmpty)
+                                        ? startup.certificateId!
+                                        : startup.id;
                                 context.read<CertificateBloc>().add(
-                                  DownloadCertificate(startup.id),
+                                  DownloadCertificate(certTargetId),
                                 );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(

@@ -1,7 +1,7 @@
 class ApiConfig {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://startupethiopia.et',
+    defaultValue: 'https://startupet.et',
   );
 
   static const String apiKeyHeader = String.fromEnvironment(

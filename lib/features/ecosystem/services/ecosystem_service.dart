@@ -28,8 +28,15 @@ class EcosystemService {
     return list.map((e) => fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  T _parseSingle<T>(dynamic data, T Function(Map<String, dynamic>) fromJson) =>
-      fromJson(data as Map<String, dynamic>);
+  T _parseSingle<T>(dynamic data, T Function(Map<String, dynamic>) fromJson) {
+    if (data is Map<String, dynamic>) {
+      if (data['data'] is Map<String, dynamic>) {
+        return fromJson(data['data'] as Map<String, dynamic>);
+      }
+      return fromJson(data);
+    }
+    return fromJson({});
+  }
 
   Future<Either<ApiException, List<EcosystemApplication>>>
   getApplications() async {
